@@ -1,0 +1,51 @@
+package com.example.domain.model;
+
+import java.time.LocalDate;
+
+public class ExpenditureRecord {
+    private User user;
+    private String name;
+    private int money;
+    private String category;
+    private LocalDate date;
+    
+    public ExpenditureRecord(User user, String name, int money, String category) {
+        this.user = user;
+        this.name = name;
+        this.money = money;
+        this.category = category;
+        this.date = LocalDate.now(); // 預設為今日
+    }
+    
+    public ExpenditureRecord(User user, String name, int money, String category, LocalDate date) {
+        this.user = user;
+        this.name = name;
+        this.money = money;
+        this.category = category;
+        this.date = date;
+    }
+    
+    public int getMoney() {
+        return money;
+    }
+    
+    public User getUser() {
+        return user;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public String getCategory() {
+        return category;
+    }
+    
+    public LocalDate getDate() {
+        return date;
+    }
+    
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+}
