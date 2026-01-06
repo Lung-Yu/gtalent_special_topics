@@ -12,12 +12,13 @@ import com.example.application.command.ExpenditureCommand;
 import com.example.domain.model.ExpenditureRecord;
 import com.example.domain.model.User;
 import com.example.domain.repository.ExpenditureRecordRepository;
+import com.example.domain.service.ConsumptionService;
 import com.example.infrastructure.persistence.InMemoryExpenditureRecordRepository;
 
 public class ExpenditureUseCaseTest {
 
     private ExpenditureRecordRepository expenditureRecordRepository;
-    private ConsumptionUseCase consumptionUseCase;
+    private ConsumptionService consumptionService;
     private ExpenditureUseCase expenditureUseCase;
 
     private User user1;
@@ -26,8 +27,8 @@ public class ExpenditureUseCaseTest {
     @Before
     public void setUp() {
         expenditureRecordRepository = new InMemoryExpenditureRecordRepository();
-        consumptionUseCase = new ConsumptionUseCase(expenditureRecordRepository);
-        expenditureUseCase = new ExpenditureUseCase(consumptionUseCase, expenditureRecordRepository);
+        consumptionService = new ConsumptionService(expenditureRecordRepository);
+        expenditureUseCase = new ExpenditureUseCase(consumptionService, expenditureRecordRepository);
 
         user1 = new User("user1");
         user2 = new User("user2");
@@ -56,7 +57,7 @@ public class ExpenditureUseCaseTest {
 
         for (String payway : payways) {
             expenditureRecordRepository = new InMemoryExpenditureRecordRepository();
-            expenditureUseCase = new ExpenditureUseCase(consumptionUseCase, expenditureRecordRepository);
+            expenditureUseCase = new ExpenditureUseCase(consumptionService, expenditureRecordRepository);
 
             ExpenditureCommand command = new ExpenditureCommand();
             command.setUser(user1);
@@ -221,7 +222,7 @@ public class ExpenditureUseCaseTest {
 
         for (String category : categories) {
             expenditureRecordRepository = new InMemoryExpenditureRecordRepository();
-            expenditureUseCase = new ExpenditureUseCase(consumptionUseCase, expenditureRecordRepository);
+            expenditureUseCase = new ExpenditureUseCase(consumptionService, expenditureRecordRepository);
 
             ExpenditureCommand command = new ExpenditureCommand();
             command.setUser(user1);

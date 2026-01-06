@@ -4,11 +4,20 @@ import com.example.domain.model.User;
 
 public class ExpenditureCommand {
     
+    private String name;
     private int money;
     private User user;
     private String payway;
     private String category;
     
+    public void setName(String name){
+        this.name = name;
+    }
+
+    public String getName(){
+        return this.name;
+    }
+
     public int getMoney() {
         return money;
     }

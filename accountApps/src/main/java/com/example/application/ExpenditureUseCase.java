@@ -1,44 +1,30 @@
 package com.example.application;
 
+import java.time.LocalDate;
+
 import com.example.application.command.ConsumptionCommand;
 import com.example.application.command.ExpenditureCommand;
 import com.example.domain.model.ExpenditureRecord;
 import com.example.domain.repository.ExpenditureRecordRepository;
+import com.example.domain.service.ConsumptionService;
 import com.example.domain.valueobject.PaywaySupport;
 
 public class ExpenditureUseCase {
     private ExpenditureRecordRepository expenditureRecordRepository;
 
-    private ConsumptionUseCase consumptionUseCase;
+    private ConsumptionService consumptionService;
 
-    public ExpenditureUseCase(ConsumptionUseCase consumptionUseCase,
+    public ExpenditureUseCase(ConsumptionService consumptionService,
         ExpenditureRecordRepository expenditureRecordRepository){
-            this.consumptionUseCase = consumptionUseCase;
+            this.consumptionService = consumptionService;
             this.expenditureRecordRepository = expenditureRecordRepository;
     }
 
     public void execute(ExpenditureCommand command){
-        // 1. input validate
+        
         validateInput(command);
-        
-        // 2. create expenditure record and save
-        ExpenditureRecord record = new ExpenditureRecord(
-            command.getUser(),
-            command.getPayway(),
-            command.getMoney(),
-            command.getCategory()
-        );
-        expenditureRecordRepository.save(record);
-        
-        // 3. call consumptionUsecase for add record
-        ConsumptionCommand consumptionCommand = new ConsumptionCommand(
-            record.getName(),
-            record.getCategory(),
-            record.getMoney(),
-            record.getUser(),
-            record.getDate()
-        );
-        consumptionUseCase.execute(consumptionCommand);
+    
+        consumptionService.execute(command);
     }
     
     private void validateInput(ExpenditureCommand command) {
