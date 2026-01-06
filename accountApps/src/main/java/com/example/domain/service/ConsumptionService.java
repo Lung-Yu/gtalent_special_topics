@@ -4,7 +4,7 @@ import com.example.application.command.ConsumptionCommand;
 import com.example.application.command.ExpenditureCommand;
 import com.example.domain.model.ExpenditureRecord;
 import com.example.domain.repository.ExpenditureRecordRepository;
-import com.example.domain.valueobject.PaywaySupport;
+import com.example.domain.valueobject.PaymentMethod;
 
 /**
  * Domain service responsible for recording a consumption into expenditure records.
@@ -24,7 +24,7 @@ public class ConsumptionService {
             command.getName(),
             command.getMoney(),
             command.getCategory(),
-            PaywaySupport.valueOf(command.getPayway())
+            PaymentMethod.valueOf(command.getPayway())
         );
 
         expenditureRecordRepository.save(expenditureRecord);

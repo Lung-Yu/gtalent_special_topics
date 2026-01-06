@@ -12,7 +12,7 @@ import com.example.domain.model.ExpenditureRecord;
 import com.example.domain.model.User;
 import com.example.domain.repository.ExpenditureRecordRepository;
 import com.example.domain.service.ConsumptionService;
-import com.example.domain.valueobject.PaywaySupport;
+import com.example.domain.valueobject.PaymentMethod;
 import com.example.infrastructure.persistence.InMemoryExpenditureRecordRepository;
 
 public class ExpenditureUseCaseTest {
@@ -68,7 +68,7 @@ public class ExpenditureUseCaseTest {
             expenditureUseCase.execute(command);
 
             assertEquals(count_expect, expenditureRecordRepository.findAll().size());
-            assertEquals(PaywaySupport.valueOf(payway), expenditureRecordRepository.findAll().get(count_expect - 1).getPayway());
+            assertEquals(PaymentMethod.valueOf(payway), expenditureRecordRepository.findAll().get(count_expect - 1).getPayway());
 
             count_expect++;
         }

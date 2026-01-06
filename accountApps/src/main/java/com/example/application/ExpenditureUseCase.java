@@ -2,7 +2,7 @@ package com.example.application;
 
 import com.example.application.command.ExpenditureCommand;
 import com.example.domain.service.ConsumptionService;
-import com.example.domain.valueobject.PaywaySupport;
+import com.example.domain.valueobject.PaymentMethod;
 
 public class ExpenditureUseCase {
     private ConsumptionService consumptionService;
@@ -37,7 +37,7 @@ public class ExpenditureUseCase {
         
         // Validate payway support
         try {
-            PaywaySupport.valueOf(command.getPayway());
+            PaymentMethod.valueOf(command.getPayway());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Unsupported payway: " + command.getPayway());
         }

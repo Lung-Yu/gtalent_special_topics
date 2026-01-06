@@ -1,6 +1,6 @@
 package com.example.domain.valueobject;
 
-public enum PaywaySupport {
+public enum PaymentMethod {
     LinePay,
     AppPay,
     GooglePay
