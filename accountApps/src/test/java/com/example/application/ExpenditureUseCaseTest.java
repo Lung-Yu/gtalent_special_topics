@@ -4,10 +4,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-import java.time.LocalDate;
-
 import org.junit.Before;
 import org.junit.Test;
+
 import com.example.application.command.ExpenditureCommand;
 import com.example.domain.model.ExpenditureRecord;
 import com.example.domain.model.User;
@@ -28,7 +27,7 @@ public class ExpenditureUseCaseTest {
     public void setUp() {
         expenditureRecordRepository = new InMemoryExpenditureRecordRepository();
         consumptionService = new ConsumptionService(expenditureRecordRepository);
-        expenditureUseCase = new ExpenditureUseCase(consumptionService, expenditureRecordRepository);
+        expenditureUseCase = new ExpenditureUseCase(consumptionService);
 
         user1 = new User("user1");
         user2 = new User("user2");
@@ -53,11 +52,11 @@ public class ExpenditureUseCaseTest {
 
     @Test
     public void executeWithDifferentPayways() {
-        String[] payways = {"LinePay", "AppPay", "GooglePay"};
+        String[] payways = { "LinePay", "AppPay", "GooglePay" };
 
+        int count_expect = 1;
         for (String payway : payways) {
-            expenditureRecordRepository = new InMemoryExpenditureRecordRepository();
-            expenditureUseCase = new ExpenditureUseCase(consumptionService, expenditureRecordRepository);
+            expenditureUseCase = new ExpenditureUseCase(consumptionService);
 
             ExpenditureCommand command = new ExpenditureCommand();
             command.setUser(user1);
@@ -67,8 +66,10 @@ public class ExpenditureUseCaseTest {
 
             expenditureUseCase.execute(command);
 
-            assertEquals(1, expenditureRecordRepository.findAll().size());
-            assertEquals(payway, expenditureRecordRepository.findAll().get(0).getName());
+            assertEquals(count_expect, expenditureRecordRepository.findAll().size());
+            assertEquals(payway, expenditureRecordRepository.findAll().get(count_expect - 1).getPayway());
+
+            count_expect++;
         }
     }
 
@@ -218,11 +219,11 @@ public class ExpenditureUseCaseTest {
 
     @Test
     public void executeWithDifferentCategories() {
-        String[] categories = {"food", "shopping", "entertainment", "transport"};
+        String[] categories = { "food", "shopping", "entertainment", "transport" };
 
+        int count_expect = 1;
         for (String category : categories) {
-            expenditureRecordRepository = new InMemoryExpenditureRecordRepository();
-            expenditureUseCase = new ExpenditureUseCase(consumptionService, expenditureRecordRepository);
+            expenditureUseCase = new ExpenditureUseCase(consumptionService);
 
             ExpenditureCommand command = new ExpenditureCommand();
             command.setUser(user1);
@@ -232,8 +233,10 @@ public class ExpenditureUseCaseTest {
 
             expenditureUseCase.execute(command);
 
-            assertEquals(1, expenditureRecordRepository.findAll().size());
-            assertEquals(category, expenditureRecordRepository.findAll().get(0).getCategory());
+            assertEquals(count_expect, expenditureRecordRepository.findAll().size());
+            assertEquals(category, expenditureRecordRepository.findAll().get(count_expect - 1).getCategory());
+
+            count_expect++;
         }
     }
 }

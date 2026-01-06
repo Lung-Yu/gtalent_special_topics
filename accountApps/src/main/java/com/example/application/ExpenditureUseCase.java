@@ -1,23 +1,14 @@
 package com.example.application;
 
-import java.time.LocalDate;
-
-import com.example.application.command.ConsumptionCommand;
 import com.example.application.command.ExpenditureCommand;
-import com.example.domain.model.ExpenditureRecord;
-import com.example.domain.repository.ExpenditureRecordRepository;
 import com.example.domain.service.ConsumptionService;
 import com.example.domain.valueobject.PaywaySupport;
 
 public class ExpenditureUseCase {
-    private ExpenditureRecordRepository expenditureRecordRepository;
-
     private ConsumptionService consumptionService;
 
-    public ExpenditureUseCase(ConsumptionService consumptionService,
-        ExpenditureRecordRepository expenditureRecordRepository){
+    public ExpenditureUseCase(ConsumptionService consumptionService){
             this.consumptionService = consumptionService;
-            this.expenditureRecordRepository = expenditureRecordRepository;
     }
 
     public void execute(ExpenditureCommand command){

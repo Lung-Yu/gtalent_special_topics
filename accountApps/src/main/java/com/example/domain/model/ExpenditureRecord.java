@@ -7,21 +7,19 @@ public class ExpenditureRecord {
     private String name;
     private int money;
     private String category;
+    private String payway;
     private LocalDate date;
     
-    public ExpenditureRecord(User user, String name, int money, String category) {
-        this.user = user;
-        this.name = name;
-        this.money = money;
-        this.category = category;
-        this.date = LocalDate.now(); // 預設為今日
+    public ExpenditureRecord(User user, String name, int money, String category, String payway) {
+        this(user, name, money, category, payway, LocalDate.now()); // 預設為今日
     }
     
-    public ExpenditureRecord(User user, String name, int money, String category, LocalDate date) {
+    public ExpenditureRecord(User user, String name, int money, String category, String payway, LocalDate date) {
         this.user = user;
         this.name = name;
         this.money = money;
         this.category = category;
+        this.payway = payway;
         this.date = date;
     }
     
@@ -39,6 +37,10 @@ public class ExpenditureRecord {
     
     public String getCategory() {
         return category;
+    }
+    
+    public String getPayway() {
+        return payway;
     }
     
     public LocalDate getDate() {

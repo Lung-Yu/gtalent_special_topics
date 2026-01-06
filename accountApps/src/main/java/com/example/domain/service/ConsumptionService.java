@@ -22,7 +22,8 @@ public class ConsumptionService {
             command.getUser(),
             command.getName(),
             command.getMoney(),
-            command.getCategory()
+            command.getCategory(),
+            command.getPayway()
         );
 
         expenditureRecordRepository.save(expenditureRecord);

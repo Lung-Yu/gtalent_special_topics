@@ -65,10 +65,10 @@ public class DailyConsumptionStatisticsUseCaseTest {
     @Test
     public void testCalculate_WithUserStatistics_ShouldGroupByUserAndCategory() {
         // Arrange: 準備測試資料
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, "food", testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "晚餐", 150, "food", testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "薪水", 50000, "salary", testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user2, "早餐", 50, "food", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, "food", "LinePay", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "晚餐", 150, "food", "LinePay", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "薪水", 50000, "salary", "LinePay", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user2, "早餐", 50, "food", "LinePay", testDate));
         
         DailyStatisticsCommand command = new DailyStatisticsCommand(testDate, StatisticsType.USER_STATISTICS);
         
@@ -108,10 +108,10 @@ public class DailyConsumptionStatisticsUseCaseTest {
     @Test
     public void testCalculate_WithManagerStatistics_ShouldGroupByCategoryOnly() {
         // Arrange: 準備測試資料
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, "food", testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "晚餐", 150, "food", testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user2, "早餐", 50, "food", testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "薪水", 50000, "salary", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, "food", "LinePay", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "晚餐", 150, "food", "LinePay", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user2, "早餐", 50, "food", "LinePay", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "薪水", 50000, "salary", "LinePay", testDate));
         
         DailyStatisticsCommand command = new DailyStatisticsCommand(testDate, StatisticsType.MANAGER_STATISTICS);
         
@@ -163,8 +163,8 @@ public class DailyConsumptionStatisticsUseCaseTest {
     public void testCalculate_WithDifferentDate_ShouldOnlyCountMatchingDate() {
         // Arrange: 準備不同日期的資料
         LocalDate yesterday = testDate.minusDays(1);
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "昨天午餐", 100, "food", yesterday));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "今天午餐", 200, "food", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "昨天午餐", 100, "food", "LinePay", yesterday));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "今天午餐", 200, "food", "LinePay", testDate));
         
         DailyStatisticsCommand command = new DailyStatisticsCommand(testDate, StatisticsType.USER_STATISTICS);
         
@@ -180,8 +180,8 @@ public class DailyConsumptionStatisticsUseCaseTest {
     @Test
     public void testCalculate_DefaultCommandType_ShouldUseUserStatistics() {
         // Arrange: 使用預設建構子（預設為使用者統計）
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, "food", testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user2, "午餐", 150, "food", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, "food", "LinePay", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user2, "午餐", 150, "food", "LinePay", testDate));
         
         DailyStatisticsCommand command = new DailyStatisticsCommand(testDate);
         
@@ -199,10 +199,10 @@ public class DailyConsumptionStatisticsUseCaseTest {
     @Test
     public void testCalculate_MultipleCategories_ShouldGroupCorrectly() {
         // Arrange: 同一使用者有多種類別的消費
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, "food", testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "晚餐", 200, "food", testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "獎金", 10000, "salary", testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "年終", 30000, "salary", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, "food", "LinePay", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "晚餐", 200, "food", "LinePay", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "獎金", 10000, "salary", "LinePay", testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "年終", 30000, "salary", "LinePay", testDate));
         
         DailyStatisticsCommand command = new DailyStatisticsCommand(testDate, StatisticsType.USER_STATISTICS);
         
