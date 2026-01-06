@@ -26,6 +26,13 @@ public class InMemoryExpenditureRecordRepository implements ExpenditureRecordRep
                 .filter(record -> record.getDate().equals(date))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<ExpenditureRecord> findByUser(User user) {
+        return records.stream()
+                .filter(record -> record.getUser().equals(user))
+                .collect(Collectors.toList());
+    }
     
     @Override
     public void save(ExpenditureRecord record) {

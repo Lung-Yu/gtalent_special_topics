@@ -11,6 +11,8 @@ public interface ExpenditureRecordRepository {
     
     List<ExpenditureRecord> findByDate(LocalDate date);
 
+    List<ExpenditureRecord> findByUser(User user);
+
     void save(ExpenditureRecord record);
 
     List<ExpenditureRecord> findAll();
