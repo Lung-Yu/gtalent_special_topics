@@ -26,11 +26,21 @@ public class TagsUseCase {
         }
 
         // do something
+        //case 1
         List<Tag> conditions = tagsRepository.findByName(command.getName());
-
-        for(Tag tag : conditions){
-            if(tag.getType().equals(type))
+        for (Tag tag : conditions) {
+            if (tag.getType().equals(type))
                 throw new IllegalArgumentException("Tag with same name and type already exists");
+        }
+
+        //case 2
+        if (tagsRepository.existsByTypeAndName(command.getName(), command.getType())) {
+            throw new IllegalArgumentException("Tag with same name and type already exists");
+        }
+
+        //case 3
+        if (tagsRepository.findByTypeAndName(command.getName(), command.getType()) != null) {
+            throw new IllegalArgumentException("Tag with same name and type already exists");
         }
 
         Tag tag = new Tag(command.getName(), command.getIcon(), type);

@@ -9,4 +9,6 @@ public interface TagsRepository {
     List<Tag> findByType(String type);
     void save(Tag tag);
     List<Tag> findAll();
+    Tag findByTypeAndName(String name, String type);
+    boolean existsByTypeAndName(String name, String type);
 }

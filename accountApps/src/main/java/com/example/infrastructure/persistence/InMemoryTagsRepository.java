@@ -53,4 +53,22 @@ public class InMemoryTagsRepository implements TagsRepository {
     public List<Tag> findAll() {
         return new ArrayList<>(tags);
     }
+
+    @Override
+    public Tag findByTypeAndName(String name, String type) {
+        if (name == null || type == null) {
+            return null;
+        }
+        String normalizedType = type.trim().toUpperCase();
+        return tags.stream()
+                .filter(t -> t.getName() != null && t.getName().equalsIgnoreCase(name)
+                        && t.getType() != null && t.getType().name().equalsIgnoreCase(normalizedType))
+                .findFirst()
+                .orElse(null);
+    }
+
+    @Override
+    public boolean existsByTypeAndName(String name, String type) {
+        return findByTypeAndName(name, type) != null;
+    }
 }
