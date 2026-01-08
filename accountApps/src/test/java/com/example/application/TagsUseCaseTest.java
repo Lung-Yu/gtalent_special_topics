@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.example.application.command.TagCreateCommand;
+import com.example.application.exception.DuplicateTagException;
 import com.example.application.exception.TagTypeNotExists;
 import com.example.domain.model.Tag;
 import com.example.domain.model.User;
@@ -301,8 +302,8 @@ public class TagsUseCaseTest {
         try {
             tagsUseCase.execute(command2);
             fail("Should throw exception for duplicate tag name with same type");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Tag with same name and type already exists", e.getMessage());
+        } catch (DuplicateTagException e) {
+            assertEquals("Tag with name '薪水' and type 'income' already exists", e.getMessage());
         }
     }
 

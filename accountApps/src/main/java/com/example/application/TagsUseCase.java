@@ -1,8 +1,7 @@
 package com.example.application;
 
-import java.util.List;
-
 import com.example.application.command.TagCreateCommand;
+import com.example.application.exception.DuplicateTagException;
 import com.example.application.exception.TagTypeNotExists;
 import com.example.domain.model.Tag;
 import com.example.domain.repository.TagsRepository;
@@ -25,22 +24,9 @@ public class TagsUseCase {
             throw new TagTypeNotExists(command.getType());
         }
 
-        // do something
-        //case 1
-        List<Tag> conditions = tagsRepository.findByName(command.getName());
-        for (Tag tag : conditions) {
-            if (tag.getType().equals(type))
-                throw new IllegalArgumentException("Tag with same name and type already exists");
-        }
-
-        //case 2
+        // 檢查是否已存在相同名稱和類型的標籤
         if (tagsRepository.existsByTypeAndName(command.getName(), command.getType())) {
-            throw new IllegalArgumentException("Tag with same name and type already exists");
-        }
-
-        //case 3
-        if (tagsRepository.findByTypeAndName(command.getName(), command.getType()) != null) {
-            throw new IllegalArgumentException("Tag with same name and type already exists");
+            throw new DuplicateTagException(command.getName(), command.getType());
         }
 
         Tag tag = new Tag(command.getName(), command.getIcon(), type);
