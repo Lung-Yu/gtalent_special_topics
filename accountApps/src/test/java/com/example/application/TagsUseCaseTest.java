@@ -3,6 +3,9 @@ package com.example.application;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -317,5 +320,66 @@ public class TagsUseCaseTest {
 
         assertEquals(2, tagsRepository.findAll().size());
         assertEquals(2, tagsRepository.findByName("薪水").size());
+    }
+
+    @Test
+    public void execute_WithPresetTags_ShouldPreventDuplicateCreation() {
+        // 模擬系統預設標籤
+        List<Tag> presetTags = Arrays.asList(
+            new Tag("食物", "🍔", TypeTag.OUTCOME),
+            new Tag("薪水", "💰", TypeTag.INCOME),
+            new Tag("交通", "🚗", TypeTag.OUTCOME)
+        );
+        
+        // 使用帶預設標籤的 repository
+        tagsRepository = new InMemoryTagsRepository(presetTags);
+        tagsUseCase = new TagsUseCase(tagsRepository);
+        
+        // 驗證預設標籤已存在
+        assertEquals(3, tagsRepository.findAll().size());
+        
+        // 嘗試建立與預設標籤相同的標籤
+        TagCreateCommand command = new TagCreateCommand(
+            user1,
+            "食物",
+            "outcome",
+            "🍕"  // 即使圖示不同
+        );
+        
+        try {
+            tagsUseCase.execute(command);
+            fail("Should throw DuplicateTagException when creating tag with same name and type as preset");
+        } catch (DuplicateTagException e) {
+            assertEquals("Tag with name '食物' and type 'outcome' already exists", e.getMessage());
+        } catch (TagTypeNotExists e) {
+            fail("Should throw DuplicateTagException, not TagTypeNotExists");
+        }
+        
+        // 確認沒有新增標籤
+        assertEquals(3, tagsRepository.findAll().size());
+    }
+
+    @Test
+    public void execute_WithPresetTags_AllowDifferentType() throws TagTypeNotExists {
+        // 模擬系統預設標籤
+        List<Tag> presetTags = Arrays.asList(
+            new Tag("薪水", "💰", TypeTag.INCOME)
+        );
+        
+        tagsRepository = new InMemoryTagsRepository(presetTags);
+        tagsUseCase = new TagsUseCase(tagsRepository);
+        
+        // 建立相同名稱但不同類型的標籤應該成功
+        TagCreateCommand command = new TagCreateCommand(
+            user1,
+            "薪水",
+            "outcome",  // 不同類型
+            "💵"
+        );
+        
+        tagsUseCase.execute(command);
+        
+        // 應該有 2 個標籤
+        assertEquals(2, tagsRepository.findAll().size());
     }
 }
