@@ -290,4 +290,31 @@ public class TagsUseCaseTest {
         assertEquals(2, tagsRepository.findByType("INCOME").size());
         assertEquals(1, tagsRepository.findByType("OUTCOME").size());
     }
+
+    @Test
+    public void execute_WithDuplicateNameAndType_ShouldThrowException() throws TagTypeNotExists {
+        TagCreateCommand command1 = new TagCreateCommand(user1, "薪水", "income", "💰");
+        TagCreateCommand command2 = new TagCreateCommand(user1, "薪水", "income", "💵");
+
+        tagsUseCase.execute(command1);
+        
+        try {
+            tagsUseCase.execute(command2);
+            fail("Should throw exception for duplicate tag name with same type");
+        } catch (IllegalArgumentException e) {
+            assertEquals("Tag with same name and type already exists", e.getMessage());
+        }
+    }
+
+    @Test
+    public void execute_WithSameNameDifferentType_ShouldSaveSuccessfully() throws TagTypeNotExists {
+        TagCreateCommand command1 = new TagCreateCommand(user1, "薪水", "income", "💰");
+        TagCreateCommand command2 = new TagCreateCommand(user1, "薪水", "outcome", "💵");
+
+        tagsUseCase.execute(command1);
+        tagsUseCase.execute(command2);
+
+        assertEquals(2, tagsRepository.findAll().size());
+        assertEquals(2, tagsRepository.findByName("薪水").size());
+    }
 }
