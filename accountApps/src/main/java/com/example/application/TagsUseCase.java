@@ -1,5 +1,7 @@
 package com.example.application;
 
+import java.util.List;
+
 import com.example.application.command.TagCreateCommand;
 import com.example.application.exception.TagTypeNotExists;
 import com.example.domain.model.Tag;
@@ -21,6 +23,14 @@ public class TagsUseCase {
             type = TypeTag.fromString(command.getType());
         } catch (IllegalArgumentException ex) {
             throw new TagTypeNotExists(command.getType());
+        }
+
+        // do something
+        List<Tag> conditions = tagsRepository.findByName(command.getName());
+
+        for(Tag tag : conditions){
+            if(tag.getType().equals(type))
+                throw new IllegalArgumentException("Tag with same name and type already exists");
         }
 
         Tag tag = new Tag(command.getName(), command.getIcon(), type);
