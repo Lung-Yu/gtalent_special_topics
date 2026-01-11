@@ -19,6 +19,7 @@ import com.example.domain.repository.CategoryRepository;
 import com.example.domain.repository.ExpenditureRecordRepository;
 import com.example.domain.service.ConsumptionService;
 import com.example.domain.valueobject.PaymentMethod;
+import com.example.domain.valueobject.TypeCategory;
 import com.example.infrastructure.persistence.InMemoryCategoryRepository;
 import com.example.infrastructure.persistence.InMemoryExpenditureRecordRepository;
 
@@ -280,7 +281,7 @@ public class ExpenditureUseCaseTest {
     @Test
     public void executeWithExistingCategory_ShouldNotCreateDuplicate() {
         // 預先建立一個分類
-        Category existingCategory = new Category("food", "🍔", com.example.domain.valueobject.TypeCategory.OUTCOME);
+        Category existingCategory = new Category("food", "🍔", TypeCategory.OUTCOME, user1);
         categoryRepository.save(existingCategory);
         
         assertEquals(1, categoryRepository.findAll().size());

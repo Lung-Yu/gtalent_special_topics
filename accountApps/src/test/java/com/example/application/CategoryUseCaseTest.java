@@ -1,6 +1,7 @@
 package com.example.application;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
@@ -48,6 +49,8 @@ public class CategoryUseCaseTest {
         assertEquals("薪水", savedCategory.getName());
         assertEquals("💰", savedCategory.getIcon());
         assertEquals(TypeCategory.INCOME, savedCategory.getType());
+        assertNotNull("createdAt should not be null", savedCategory.getCreatedAt());
+        assertEquals("createdBy should be user1", user1, savedCategory.getCreatedBy());
     }
 
     @Test
@@ -326,9 +329,9 @@ public class CategoryUseCaseTest {
     public void execute_WithPresetCategories_ShouldPreventDuplicateCreation() {
         // 模擬系統預設標籤
         List<Category> presetCategories = Arrays.asList(
-            new Category("食物", "🍔", TypeCategory.OUTCOME),
-            new Category("薪水", "💰", TypeCategory.INCOME),
-            new Category("交通", "🚗", TypeCategory.OUTCOME)
+            new Category("食物", "🍔", TypeCategory.OUTCOME, user1),
+            new Category("薪水", "💰", TypeCategory.INCOME, user1),
+            new Category("交通", "🚗", TypeCategory.OUTCOME, user1)
         );
         
         // 使用帶預設標籤的 repository
@@ -363,7 +366,7 @@ public class CategoryUseCaseTest {
     public void execute_WithPresetCategories_AllowDifferentType() throws CategoryTypeNotExists {
         // 模擬系統預設標籤
         List<Category> presetCategories = Arrays.asList(
-            new Category("薪水", "💰", TypeCategory.INCOME)
+            new Category("薪水", "💰", TypeCategory.INCOME, user1)
         );
         
         categoryRepository = new InMemoryCategoryRepository(presetCategories);

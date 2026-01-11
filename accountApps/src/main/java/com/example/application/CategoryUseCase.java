@@ -29,7 +29,7 @@ public class CategoryUseCase {
             throw new DuplicateCategoryException(command.getName(), command.getType());
         }
 
-        Category category = new Category(command.getName(), command.getIcon(), type);
+        Category category = new Category(command.getName(), command.getIcon(), type, command.getUser());
         categoryRepository.save(category);
     }
 

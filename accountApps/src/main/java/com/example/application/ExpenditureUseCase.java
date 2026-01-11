@@ -1,8 +1,6 @@
 package com.example.application;
 
-import com.example.application.command.CategoryCreateCommand;
 import com.example.application.command.ExpenditureCommand;
-import com.example.application.exception.CategoryTypeNotExists;
 import com.example.domain.model.Category;
 import com.example.domain.repository.CategoryRepository;
 import com.example.domain.service.ConsumptionService;
@@ -33,7 +31,7 @@ public class ExpenditureUseCase {
             // 檢查該分類是否已存在（OUTCOME 類型）
             if (!categoryRepository.existsByTypeAndName(categoryName, "OUTCOME")) {
                 // 不存在則自動建立
-                Category newCategory = new Category(categoryName, "", TypeCategory.OUTCOME);
+                Category newCategory = new Category(categoryName, "", TypeCategory.OUTCOME, command.getUser());
                 categoryRepository.save(newCategory);
             }
         }
