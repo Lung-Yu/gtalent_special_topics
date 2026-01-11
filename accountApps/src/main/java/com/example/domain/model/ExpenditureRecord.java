@@ -1,21 +1,22 @@
 package com.example.domain.model;
 
 import java.time.LocalDate;
+import java.util.List;
 import com.example.domain.valueobject.PaymentMethod;
 
 public class ExpenditureRecord {
     private User user;
     private String name;
     private int money;
-    private String category;
+    private List<String> category;
     private PaymentMethod payway;
     private LocalDate date;
     
-    public ExpenditureRecord(User user, String name, int money, String category, PaymentMethod payway) {
+    public ExpenditureRecord(User user, String name, int money, List<String> category, PaymentMethod payway) {
         this(user, name, money, category, payway, LocalDate.now()); // 預設為今日
     }
     
-    public ExpenditureRecord(User user, String name, int money, String category, PaymentMethod payway, LocalDate date) {
+    public ExpenditureRecord(User user, String name, int money, List<String> category, PaymentMethod payway, LocalDate date) {
         this.user = user;
         this.name = name;
         this.money = money;
@@ -36,7 +37,7 @@ public class ExpenditureRecord {
         return name;
     }
     
-    public String getCategory() {
+    public List<String> getCategory() {
         return category;
     }
     

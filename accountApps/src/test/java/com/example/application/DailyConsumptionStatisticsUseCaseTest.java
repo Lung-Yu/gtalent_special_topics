@@ -3,6 +3,7 @@ package com.example.application;
 import static org.junit.Assert.*;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
@@ -66,10 +67,10 @@ public class DailyConsumptionStatisticsUseCaseTest {
     @Test
     public void testCalculate_WithUserStatistics_ShouldGroupByUserAndCategory() {
         // Arrange: 準備測試資料
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, "food", PaymentMethod.LinePay, testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "晚餐", 150, "food", PaymentMethod.LinePay, testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "薪水", 50000, "salary", PaymentMethod.LinePay, testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user2, "早餐", 50, "food", PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, Arrays.asList("food"), PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "晚餐", 150, Arrays.asList("food"), PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "薪水", 50000, Arrays.asList("salary"), PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user2, "早餐", 50, Arrays.asList("food"), PaymentMethod.LinePay, testDate));
         
         DailyStatisticsCommand command = new DailyStatisticsCommand(testDate, StatisticsType.USER_STATISTICS);
         
@@ -109,10 +110,10 @@ public class DailyConsumptionStatisticsUseCaseTest {
     @Test
     public void testCalculate_WithManagerStatistics_ShouldGroupByCategoryOnly() {
         // Arrange: 準備測試資料
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, "food", PaymentMethod.LinePay, testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "晚餐", 150, "food", PaymentMethod.LinePay, testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user2, "早餐", 50, "food", PaymentMethod.LinePay, testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "薪水", 50000, "salary", PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, Arrays.asList("food"), PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "晚餐", 150, Arrays.asList("food"), PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user2, "早餐", 50, Arrays.asList("food"), PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "薪水", 50000, Arrays.asList("salary"), PaymentMethod.LinePay, testDate));
         
         DailyStatisticsCommand command = new DailyStatisticsCommand(testDate, StatisticsType.MANAGER_STATISTICS);
         
@@ -164,8 +165,8 @@ public class DailyConsumptionStatisticsUseCaseTest {
     public void testCalculate_WithDifferentDate_ShouldOnlyCountMatchingDate() {
         // Arrange: 準備不同日期的資料
         LocalDate yesterday = testDate.minusDays(1);
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "昨天午餐", 100, "food", PaymentMethod.LinePay, yesterday));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "今天午餐", 200, "food", PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "昨天午餐", 100, Arrays.asList("food"), PaymentMethod.LinePay, yesterday));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "今天午餐", 200, Arrays.asList("food"), PaymentMethod.LinePay, testDate));
         
         DailyStatisticsCommand command = new DailyStatisticsCommand(testDate, StatisticsType.USER_STATISTICS);
         
@@ -181,8 +182,8 @@ public class DailyConsumptionStatisticsUseCaseTest {
     @Test
     public void testCalculate_DefaultCommandType_ShouldUseUserStatistics() {
         // Arrange: 使用預設建構子（預設為使用者統計）
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, "food", PaymentMethod.LinePay, testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user2, "午餐", 150, "food", PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, Arrays.asList("food"), PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user2, "午餐", 150, Arrays.asList("food"), PaymentMethod.LinePay, testDate));
         
         DailyStatisticsCommand command = new DailyStatisticsCommand(testDate);
         
@@ -200,10 +201,10 @@ public class DailyConsumptionStatisticsUseCaseTest {
     @Test
     public void testCalculate_MultipleCategories_ShouldGroupCorrectly() {
         // Arrange: 同一使用者有多種類別的消費
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, "food", PaymentMethod.LinePay, testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "晚餐", 200, "food", PaymentMethod.LinePay, testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "獎金", 10000, "salary", PaymentMethod.LinePay, testDate));
-        expenditureRecordRepository.save(new ExpenditureRecord(user1, "年終", 30000, "salary", PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "午餐", 100, Arrays.asList("food"), PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "晚餐", 200, Arrays.asList("food"), PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "獎金", 10000, Arrays.asList("salary"), PaymentMethod.LinePay, testDate));
+        expenditureRecordRepository.save(new ExpenditureRecord(user1, "年終", 30000, Arrays.asList("salary"), PaymentMethod.LinePay, testDate));
         
         DailyStatisticsCommand command = new DailyStatisticsCommand(testDate, StatisticsType.USER_STATISTICS);
         

@@ -19,25 +19,28 @@ public class AdminStatisticsCalculator implements StatisticsCalculator {
         Map<String, StatisticsPoint> pointMap = new HashMap<>();
         
         for (ExpenditureRecord record : expenditureRecords) {
-            StatisticsCategory category = "food".equals(record.getCategory()) ? 
-                StatisticsCategory.food : StatisticsCategory.salary;
-            
-            // 只用類別作為 key，不區分使用者
-            String key = category.name();
-            
-            if (pointMap.containsKey(key)) {
-                // 如果已存在，累加金額
-                StatisticsPoint existingPoint = pointMap.get(key);
-                existingPoint.setAmount(existingPoint.getAmount() + record.getMoney());
-            } else {
-                // 如果不存在，創建新的 StatisticsPoint（user 設為 null 表示全體）
-                StatisticsPoint point = new StatisticsPoint(
-                    record.getMoney(),
-                    null,
-                    LocalDateTime.now(),
-                    category
-                );
-                pointMap.put(key, point);
+            // 處理每個分類
+            for (String categoryName : record.getCategory()) {
+                StatisticsCategory category = "food".equals(categoryName) ? 
+                    StatisticsCategory.food : StatisticsCategory.salary;
+                
+                // 只用類別作為 key，不區分使用者
+                String key = category.name();
+                
+                if (pointMap.containsKey(key)) {
+                    // 如果已存在，累加金額
+                    StatisticsPoint existingPoint = pointMap.get(key);
+                    existingPoint.setAmount(existingPoint.getAmount() + record.getMoney());
+                } else {
+                    // 如果不存在，創建新的 StatisticsPoint（user 設為 null 表示全體）
+                    StatisticsPoint point = new StatisticsPoint(
+                        record.getMoney(),
+                        null,
+                        LocalDateTime.now(),
+                        category
+                    );
+                    pointMap.put(key, point);
+                }
             }
         }
         

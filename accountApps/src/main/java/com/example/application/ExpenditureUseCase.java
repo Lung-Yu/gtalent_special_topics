@@ -1,21 +1,42 @@
 package com.example.application;
 
+import com.example.application.command.CategoryCreateCommand;
 import com.example.application.command.ExpenditureCommand;
+import com.example.application.exception.CategoryTypeNotExists;
+import com.example.domain.model.Category;
+import com.example.domain.repository.CategoryRepository;
 import com.example.domain.service.ConsumptionService;
 import com.example.domain.valueobject.PaymentMethod;
+import com.example.domain.valueobject.TypeCategory;
 
 public class ExpenditureUseCase {
     private ConsumptionService consumptionService;
+    private CategoryRepository categoryRepository;
 
-    public ExpenditureUseCase(ConsumptionService consumptionService){
-            this.consumptionService = consumptionService;
+    public ExpenditureUseCase(ConsumptionService consumptionService, CategoryRepository categoryRepository){
+        this.consumptionService = consumptionService;
+        this.categoryRepository = categoryRepository;
     }
 
     public void execute(ExpenditureCommand command){
         
         validateInput(command);
+        
+        // 檢查並自動建立不存在的分類
+        ensureCategoriesExist(command);
     
         consumptionService.execute(command);
+    }
+    
+    private void ensureCategoriesExist(ExpenditureCommand command) {
+        for (String categoryName : command.getCategory()) {
+            // 檢查該分類是否已存在（OUTCOME 類型）
+            if (!categoryRepository.existsByTypeAndName(categoryName, "OUTCOME")) {
+                // 不存在則自動建立
+                Category newCategory = new Category(categoryName, "", TypeCategory.OUTCOME);
+                categoryRepository.save(newCategory);
+            }
+        }
     }
     
     private void validateInput(ExpenditureCommand command) {

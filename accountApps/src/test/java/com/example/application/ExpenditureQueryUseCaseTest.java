@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
@@ -34,9 +35,9 @@ public class ExpenditureQueryUseCaseTest {
         userB = new User("userB");
 
         // Seed data for queries
-        repository.save(new ExpenditureRecord(userA, "breakfast", 120, "food", PaymentMethod.LinePay, LocalDate.of(2025, 12, 25)));
-        repository.save(new ExpenditureRecord(userA, "lunch", 250, "food", PaymentMethod.AppPay, LocalDate.of(2025, 12, 26)));
-        repository.save(new ExpenditureRecord(userB, "movie", 300, "entertainment", PaymentMethod.GooglePay, LocalDate.of(2025, 12, 25)));
+        repository.save(new ExpenditureRecord(userA, "breakfast", 120, Arrays.asList("food"), PaymentMethod.LinePay, LocalDate.of(2025, 12, 25)));
+        repository.save(new ExpenditureRecord(userA, "lunch", 250, Arrays.asList("food"), PaymentMethod.AppPay, LocalDate.of(2025, 12, 26)));
+        repository.save(new ExpenditureRecord(userB, "movie", 300, Arrays.asList("entertainment"), PaymentMethod.GooglePay, LocalDate.of(2025, 12, 25)));
     }
 
     @Test

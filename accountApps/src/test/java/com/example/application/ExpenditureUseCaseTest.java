@@ -2,22 +2,30 @@ package com.example.application;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.example.application.command.ExpenditureCommand;
+import com.example.domain.model.Category;
 import com.example.domain.model.ExpenditureRecord;
 import com.example.domain.model.User;
+import com.example.domain.repository.CategoryRepository;
 import com.example.domain.repository.ExpenditureRecordRepository;
 import com.example.domain.service.ConsumptionService;
 import com.example.domain.valueobject.PaymentMethod;
+import com.example.infrastructure.persistence.InMemoryCategoryRepository;
 import com.example.infrastructure.persistence.InMemoryExpenditureRecordRepository;
 
 public class ExpenditureUseCaseTest {
 
     private ExpenditureRecordRepository expenditureRecordRepository;
+    private CategoryRepository categoryRepository;
     private ConsumptionService consumptionService;
     private ExpenditureUseCase expenditureUseCase;
 
@@ -27,8 +35,9 @@ public class ExpenditureUseCaseTest {
     @Before
     public void setUp() {
         expenditureRecordRepository = new InMemoryExpenditureRecordRepository();
+        categoryRepository = new InMemoryCategoryRepository();
         consumptionService = new ConsumptionService(expenditureRecordRepository);
-        expenditureUseCase = new ExpenditureUseCase(consumptionService);
+        expenditureUseCase = new ExpenditureUseCase(consumptionService, categoryRepository);
 
         user1 = new User("user1");
         user2 = new User("user2");
@@ -40,15 +49,18 @@ public class ExpenditureUseCaseTest {
         command.setUser(user1);
         command.setMoney(100);
         command.setPayway("LinePay");
-        command.setCategory("food");
+        command.setCategory(Arrays.asList("food"));
 
         expenditureUseCase.execute(command);
 
         ExpenditureRecord saved = expenditureRecordRepository.findAll().get(0);
         assertEquals(user1, saved.getUser());
         assertEquals(100, saved.getMoney());
-        assertEquals("food", saved.getCategory());
+        assertEquals(Arrays.asList("food"), saved.getCategory());
         assertNotNull(saved.getDate());
+        
+        // 驗證分類有被自動建立
+        assertTrue(categoryRepository.existsByTypeAndName("food", "OUTCOME"));
     }
 
     @Test
@@ -57,13 +69,13 @@ public class ExpenditureUseCaseTest {
 
         int count_expect = 1;
         for (String payway : payways) {
-            expenditureUseCase = new ExpenditureUseCase(consumptionService);
+            expenditureUseCase = new ExpenditureUseCase(consumptionService, categoryRepository);
 
             ExpenditureCommand command = new ExpenditureCommand();
             command.setUser(user1);
             command.setMoney(50);
             command.setPayway(payway);
-            command.setCategory("shopping");
+            command.setCategory(Arrays.asList("shopping"));
 
             expenditureUseCase.execute(command);
 
@@ -90,7 +102,7 @@ public class ExpenditureUseCaseTest {
         command.setUser(null);
         command.setMoney(100);
         command.setPayway("LinePay");
-        command.setCategory("food");
+        command.setCategory(Arrays.asList("food"));
 
         try {
             expenditureUseCase.execute(command);
@@ -106,7 +118,7 @@ public class ExpenditureUseCaseTest {
         command.setUser(user1);
         command.setMoney(0);
         command.setPayway("LinePay");
-        command.setCategory("food");
+        command.setCategory(Arrays.asList("food"));
 
         try {
             expenditureUseCase.execute(command);
@@ -122,7 +134,7 @@ public class ExpenditureUseCaseTest {
         command.setUser(user1);
         command.setMoney(-50);
         command.setPayway("LinePay");
-        command.setCategory("food");
+        command.setCategory(Arrays.asList("food"));
 
         try {
             expenditureUseCase.execute(command);
@@ -138,7 +150,7 @@ public class ExpenditureUseCaseTest {
         command.setUser(user1);
         command.setMoney(100);
         command.setPayway(null);
-        command.setCategory("food");
+        command.setCategory(Arrays.asList("food"));
 
         try {
             expenditureUseCase.execute(command);
@@ -154,7 +166,7 @@ public class ExpenditureUseCaseTest {
         command.setUser(user1);
         command.setMoney(100);
         command.setPayway("UnknownPay");
-        command.setCategory("food");
+        command.setCategory(Arrays.asList("food"));
 
         try {
             expenditureUseCase.execute(command);
@@ -186,7 +198,7 @@ public class ExpenditureUseCaseTest {
         command.setUser(user1);
         command.setMoney(100);
         command.setPayway("LinePay");
-        command.setCategory("");
+        command.setCategory(Collections.emptyList());
 
         try {
             expenditureUseCase.execute(command);
@@ -202,13 +214,13 @@ public class ExpenditureUseCaseTest {
         command1.setUser(user1);
         command1.setMoney(100);
         command1.setPayway("LinePay");
-        command1.setCategory("food");
+        command1.setCategory(Arrays.asList("food"));
 
         ExpenditureCommand command2 = new ExpenditureCommand();
         command2.setUser(user2);
         command2.setMoney(200);
         command2.setPayway("AppPay");
-        command2.setCategory("shopping");
+        command2.setCategory(Arrays.asList("shopping"));
 
         expenditureUseCase.execute(command1);
         expenditureUseCase.execute(command2);
@@ -224,20 +236,66 @@ public class ExpenditureUseCaseTest {
 
         int count_expect = 1;
         for (String category : categories) {
-            expenditureUseCase = new ExpenditureUseCase(consumptionService);
+            expenditureUseCase = new ExpenditureUseCase(consumptionService, categoryRepository);
 
             ExpenditureCommand command = new ExpenditureCommand();
             command.setUser(user1);
             command.setMoney(50);
             command.setPayway("LinePay");
-            command.setCategory(category);
+            command.setCategory(Arrays.asList(category));
 
             expenditureUseCase.execute(command);
 
             assertEquals(count_expect, expenditureRecordRepository.findAll().size());
-            assertEquals(category, expenditureRecordRepository.findAll().get(count_expect - 1).getCategory());
+            assertEquals(Arrays.asList(category), expenditureRecordRepository.findAll().get(count_expect - 1).getCategory());
 
             count_expect++;
         }
+    }
+    
+    @Test
+    public void executeWithMultipleCategories_ShouldAutoCreateNonExistentCategories() {
+        ExpenditureCommand command = new ExpenditureCommand();
+        command.setUser(user1);
+        command.setMoney(100);
+        command.setPayway("LinePay");
+        command.setCategory(Arrays.asList("food", "dining", "restaurant"));
+
+        // 確認這些分類未存在
+        assertEquals(0, categoryRepository.findAll().size());
+
+        expenditureUseCase.execute(command);
+
+        // 確認支出記錄被建立
+        ExpenditureRecord saved = expenditureRecordRepository.findAll().get(0);
+        assertEquals(Arrays.asList("food", "dining", "restaurant"), saved.getCategory());
+
+        // 確認所有分類都被自動建立
+        assertEquals(3, categoryRepository.findAll().size());
+        assertTrue(categoryRepository.existsByTypeAndName("food", "OUTCOME"));
+        assertTrue(categoryRepository.existsByTypeAndName("dining", "OUTCOME"));
+        assertTrue(categoryRepository.existsByTypeAndName("restaurant", "OUTCOME"));
+    }
+    
+    @Test
+    public void executeWithExistingCategory_ShouldNotCreateDuplicate() {
+        // 預先建立一個分類
+        Category existingCategory = new Category("food", "🍔", com.example.domain.valueobject.TypeCategory.OUTCOME);
+        categoryRepository.save(existingCategory);
+        
+        assertEquals(1, categoryRepository.findAll().size());
+
+        ExpenditureCommand command = new ExpenditureCommand();
+        command.setUser(user1);
+        command.setMoney(100);
+        command.setPayway("LinePay");
+        command.setCategory(Arrays.asList("food", "newCategory"));
+
+        expenditureUseCase.execute(command);
+
+        // 應該只新增 newCategory，food 不應重複
+        assertEquals(2, categoryRepository.findAll().size());
+        assertTrue(categoryRepository.existsByTypeAndName("food", "OUTCOME"));
+        assertTrue(categoryRepository.existsByTypeAndName("newCategory", "OUTCOME"));
     }
 }

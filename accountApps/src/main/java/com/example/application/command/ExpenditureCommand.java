@@ -1,5 +1,6 @@
 package com.example.application.command;
 
+import java.util.List;
 import com.example.domain.model.User;
 
 public class ExpenditureCommand {
@@ -8,7 +9,7 @@ public class ExpenditureCommand {
     private int money;
     private User user;
     private String payway;
-    private String category;
+    private List<String> category;
     
     public void setName(String name){
         this.name = name;
@@ -34,11 +35,11 @@ public class ExpenditureCommand {
         return user;
     }
     
-    public void setCategory(String category) {
+    public void setCategory(List<String> category) {
         this.category = category;
     }
     
-    public String getCategory() {
+    public List<String> getCategory() {
         return category;
     }
     
