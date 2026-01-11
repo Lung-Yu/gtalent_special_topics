@@ -1,13 +1,13 @@
 package com.example.domain.model;
 
-import com.example.domain.valueobject.TypeTag;
+import com.example.domain.valueobject.TypeCategory;
 
-public class Tag {
+public class Category {
     private String name;
     private String icon;
-    private TypeTag type;
+    private TypeCategory type;
 
-    public Tag(String name, String icon, TypeTag type) {
+    public Category(String name, String icon, TypeCategory type) {
         this.name = name;
         this.icon = icon;
         this.type = type;
@@ -21,7 +21,7 @@ public class Tag {
         return icon;
     }
 
-    public TypeTag getType() {
+    public TypeCategory getType() {
         return type;
     }
 }

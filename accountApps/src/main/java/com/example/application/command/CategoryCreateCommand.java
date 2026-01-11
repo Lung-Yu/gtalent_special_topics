@@ -2,15 +2,15 @@ package com.example.application.command;
 
 import com.example.domain.model.User;
 
-public class TagCreateCommand {
+public class CategoryCreateCommand {
     private User user;
     private String name;
     private String type;
     private String icon;
 
-    public TagCreateCommand() {}
+    public CategoryCreateCommand() {}
 
-    public TagCreateCommand(User user, String name, String type, String icon) {
+    public CategoryCreateCommand(User user, String name, String type, String icon) {
         this.user = user;
         this.name = name;
         this.type = type;

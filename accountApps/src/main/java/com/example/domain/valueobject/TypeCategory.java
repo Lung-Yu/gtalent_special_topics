@@ -1,12 +1,12 @@
 package com.example.domain.valueobject;
 
-public enum TypeTag {
+public enum TypeCategory {
     INCOME,
     OUTCOME;
 
-    public static TypeTag fromString(String value) {
+    public static TypeCategory fromString(String value) {
         if (value == null) {
-            throw new IllegalArgumentException("Tag type cannot be null");
+            throw new IllegalArgumentException("Category type cannot be null");
         }
         switch (value.trim().toUpperCase()) {
             case "INCOME":
@@ -14,7 +14,7 @@ public enum TypeTag {
             case "OUTCOME":
                 return OUTCOME;
             default:
-                throw new IllegalArgumentException("Unknown tag type: " + value);
+                throw new IllegalArgumentException("Unknown category type: " + value);
         }
     }
 }
