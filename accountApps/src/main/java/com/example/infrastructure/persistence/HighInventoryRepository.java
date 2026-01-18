@@ -17,11 +17,24 @@ public class HighInventoryRepository implements InventoryRepository{
 
     @Override
     public Inventory findById(String id) {
-        // 提取前兩個英文字母作為前綴
-        if (id == null || id.length() < 2) {
+        // Input validation: 驗證 ID 格式 (2個字母 + 6位數字)
+        if (id == null || id.length() != 8) {
             return null;
         }
         
+        // 檢查前兩個字符是否為字母
+        if (!Character.isLetter(id.charAt(0)) || !Character.isLetter(id.charAt(1))) {
+            return null;
+        }
+        
+        // 檢查後六個字符是否為數字
+        for (int i = 2; i < 8; i++) {
+            if (!Character.isDigit(id.charAt(i))) {
+                return null;
+            }
+        }
+        
+        // 提取前兩個英文字母作為前綴
         String prefix = id.substring(0, 2);
         
         // 先透過前綴快速篩選，取得該前綴的子 Map
