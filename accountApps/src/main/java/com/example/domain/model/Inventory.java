@@ -12,8 +12,8 @@ public class Inventory {
 
     public void setId(String id){
         // AF001 格式：2個英文3個數字，否則違法，透過正規表達法檢查
-        if (!id.matches("[a-zA-Z]{2}\\d{3}")) {
-            throw new IllegalArgumentException("Invalid ID format. Expected format: 2 letters followed by 3 digits");
+        if (!id.matches("[a-zA-Z]{2}\\d{6}")) {
+            throw new IllegalArgumentException("Invalid ID format. Expected format: 2 letters followed by 6 digits");
         }
         this.id = id;        
     }
