@@ -17,6 +17,15 @@ public class Category {
         this.createdAt = LocalDateTime.now();
         this.createdBy = createdBy;
     }
+    
+    // Constructor for deserialization from persistence
+    public Category(String name, String icon, TypeCategory type, LocalDateTime createdAt, User createdBy) {
+        this.name = name;
+        this.icon = icon;
+        this.type = type;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
+    }
 
     public String getName() {
         return name;
