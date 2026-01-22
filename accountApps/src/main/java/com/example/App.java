@@ -1,67 +1,55 @@
 package com.example;
 
+import com.example.presentation.MenuController;
 import java.util.Scanner;
 
 /**
- * Hello world!
- *
+ * 記帳系統主程式
+ * 應用程式入口點，負責初始化和資源管理
  */
 public class App {
-    final Scanner scanner;
+    private final Scanner scanner;
+    private final MenuController menuController;
 
+    /**
+     * 建構子 - 初始化應用程式資源
+     */
     public App() {
-        scanner = new Scanner(System.in);
+        this.scanner = new Scanner(System.in);
+        this.menuController = new MenuController(scanner);
     }
 
+    /**
+     * 啟動應用程式
+     */
+    public void start() {
+        try {
+            menuController.start();
+        } catch (Exception e) {
+            System.err.println("系統發生錯誤：" + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 關閉應用程式資源
+     */
     public void close() {
-        scanner.close();
+        if (scanner != null) {
+            scanner.close();
+        }
     }
 
+    /**
+     * 主程式入口
+     * @param args 命令列參數
+     */
     public static void main(String[] args) {
         App app = new App();
-
-        app.start();
-
-        app.close();
-    }
-
-    public void start() {
-
-        int choose = 0;
-        showMenu();
-        do {
-            choose = scanner.nextInt();
-            switch (choose) {
-                case 1:
-                    System.out.println("1. 支出功能\n");
-                    showMenu();
-                    break;
-                case 2:
-                    System.out.println("2. 分類標籤管理\n");
-                    showMenu();
-                    break;
-                case 3:
-                    System.out.println("3. 消費紀錄查詢\n");
-                    showMenu();
-                    break;
-
-                default:
-                    System.out.print("請輸入0~3之間的數字 : ");
-                    break;
-            }
-
-        } while (choose != 0);
-
-        System.out.println();
-        System.out.println("0. 退出系統");
-    }
-
-    private void showMenu() {
-        System.out.println("=== 記帳系統選單 ===");
-        System.out.println("1. 支出功能");
-        System.out.println("2. 分類標籤管理");
-        System.out.println("3. 消費紀錄查詢");
-        System.out.println("0. 退出系統");
-        System.out.print("請選擇功能 (0-3): ");
+        try {
+            app.start();
+        } finally {
+            app.close();
+        }
     }
 }
