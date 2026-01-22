@@ -2,6 +2,7 @@ package com.example.presentation;
 
 import com.example.domain.model.User;
 import com.example.domain.repository.CategoryRepository;
+import com.example.domain.repository.ExpenditureRecordRepository;
 import java.util.Scanner;
 
 /**
@@ -12,12 +13,18 @@ public class MenuController {
     private final Scanner scanner;
     private final MenuView view;
     private final CategoryRepository categoryRepository;
+    private final ExpenditureRecordRepository expenditureRecordRepository;
     private final User currentUser;
     
-    public MenuController(Scanner scanner, CategoryRepository categoryRepository, User currentUser) {
+    public MenuController(
+            Scanner scanner, 
+            CategoryRepository categoryRepository,
+            ExpenditureRecordRepository expenditureRecordRepository,
+            User currentUser) {
         this.scanner = scanner;
         this.view = new MenuView();
         this.categoryRepository = categoryRepository;
+        this.expenditureRecordRepository = expenditureRecordRepository;
         this.currentUser = currentUser;
     }
     
@@ -88,9 +95,9 @@ public class MenuController {
      * 處理支出功能
      */
     private void handleExpenditure() {
-        view.showMessage("\n=== 支出功能 ===");
-        // TODO: 實作支出功能邏輯
-        view.showMessage("功能開發中...\n");
+        ExpenditureController expenditureController = new ExpenditureController(
+            scanner, categoryRepository, expenditureRecordRepository, currentUser);
+        expenditureController.start();
     }
     
     /**
@@ -105,8 +112,8 @@ public class MenuController {
      * 處理消費紀錄查詢
      */
     private void handleQueryRecords() {
-        view.showMessage("\n=== 消費紀錄查詢 ===");
-        // TODO: 實作消費紀錄查詢邏輯
-        view.showMessage("功能開發中...\n");
+        ExpenditureQueryController queryController = new ExpenditureQueryController(
+            scanner, expenditureRecordRepository, currentUser);
+        queryController.start();
     }
 }

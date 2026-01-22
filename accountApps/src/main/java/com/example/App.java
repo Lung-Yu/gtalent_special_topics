@@ -2,7 +2,9 @@ package com.example;
 
 import com.example.domain.model.User;
 import com.example.domain.repository.CategoryRepository;
+import com.example.domain.repository.ExpenditureRecordRepository;
 import com.example.infrastructure.persistence.InMemoryCategoryRepository;
+import com.example.infrastructure.persistence.InMemoryExpenditureRecordRepository;
 import com.example.presentation.MenuController;
 import java.util.Scanner;
 
@@ -14,6 +16,7 @@ public class App {
     private final Scanner scanner;
     private final MenuController menuController;
     private final CategoryRepository categoryRepository;
+    private final ExpenditureRecordRepository expenditureRecordRepository;
     private final User currentUser;
 
     /**
@@ -23,7 +26,9 @@ public class App {
         this.scanner = new Scanner(System.in);
         this.currentUser = new User("default_user"); // 預設使用者
         this.categoryRepository = new InMemoryCategoryRepository();
-        this.menuController = new MenuController(scanner, categoryRepository, currentUser);
+        this.expenditureRecordRepository = new InMemoryExpenditureRecordRepository();
+        this.menuController = new MenuController(
+            scanner, categoryRepository, expenditureRecordRepository, currentUser);
     }
 
     /**
