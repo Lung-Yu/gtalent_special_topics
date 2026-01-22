@@ -1,5 +1,8 @@
 package com.example;
 
+import com.example.domain.model.User;
+import com.example.domain.repository.CategoryRepository;
+import com.example.infrastructure.persistence.InMemoryCategoryRepository;
 import com.example.presentation.MenuController;
 import java.util.Scanner;
 
@@ -10,13 +13,17 @@ import java.util.Scanner;
 public class App {
     private final Scanner scanner;
     private final MenuController menuController;
+    private final CategoryRepository categoryRepository;
+    private final User currentUser;
 
     /**
      * 建構子 - 初始化應用程式資源
      */
     public App() {
         this.scanner = new Scanner(System.in);
-        this.menuController = new MenuController(scanner);
+        this.currentUser = new User("default_user"); // 預設使用者
+        this.categoryRepository = new InMemoryCategoryRepository();
+        this.menuController = new MenuController(scanner, categoryRepository, currentUser);
     }
 
     /**

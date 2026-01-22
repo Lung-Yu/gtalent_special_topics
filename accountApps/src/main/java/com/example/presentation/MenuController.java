@@ -1,5 +1,7 @@
 package com.example.presentation;
 
+import com.example.domain.model.User;
+import com.example.domain.repository.CategoryRepository;
 import java.util.Scanner;
 
 /**
@@ -9,10 +11,14 @@ import java.util.Scanner;
 public class MenuController {
     private final Scanner scanner;
     private final MenuView view;
+    private final CategoryRepository categoryRepository;
+    private final User currentUser;
     
-    public MenuController(Scanner scanner) {
+    public MenuController(Scanner scanner, CategoryRepository categoryRepository, User currentUser) {
         this.scanner = scanner;
         this.view = new MenuView();
+        this.categoryRepository = categoryRepository;
+        this.currentUser = currentUser;
     }
     
     /**
@@ -91,9 +97,8 @@ public class MenuController {
      * 處理分類標籤管理
      */
     private void handleCategoryManagement() {
-        view.showMessage("\n=== 分類標籤管理 ===");
-        // TODO: 實作分類標籤管理邏輯
-        view.showMessage("功能開發中...\n");
+        CategoryController categoryController = new CategoryController(scanner, categoryRepository, currentUser);
+        categoryController.start();
     }
     
     /**
