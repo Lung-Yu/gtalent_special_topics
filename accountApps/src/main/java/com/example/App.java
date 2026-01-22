@@ -5,6 +5,7 @@ import com.example.domain.repository.CategoryRepository;
 import com.example.domain.repository.ExpenditureRecordRepository;
 import com.example.infrastructure.persistence.InMemoryCategoryRepository;
 import com.example.infrastructure.persistence.InMemoryExpenditureRecordRepository;
+import com.example.presentation.LoginController;
 import com.example.presentation.MenuController;
 import java.util.Scanner;
 
@@ -14,21 +15,18 @@ import java.util.Scanner;
  */
 public class App {
     private final Scanner scanner;
-    private final MenuController menuController;
+    private MenuController menuController;
     private final CategoryRepository categoryRepository;
     private final ExpenditureRecordRepository expenditureRecordRepository;
-    private final User currentUser;
+    private User currentUser;
 
     /**
      * 建構子 - 初始化應用程式資源
      */
     public App() {
         this.scanner = new Scanner(System.in);
-        this.currentUser = new User("default_user"); // 預設使用者
         this.categoryRepository = new InMemoryCategoryRepository();
         this.expenditureRecordRepository = new InMemoryExpenditureRecordRepository();
-        this.menuController = new MenuController(
-            scanner, categoryRepository, expenditureRecordRepository, currentUser);
     }
 
     /**
@@ -36,7 +34,22 @@ public class App {
      */
     public void start() {
         try {
+            // 執行登入流程
+            LoginController loginController = new LoginController(scanner);
+            currentUser = loginController.login();
+            
+            if (currentUser == null) {
+                System.out.println("登入失敗，系統即將關閉。");
+                return;
+            }
+            
+            // 登入成功後初始化主選單控制器
+            menuController = new MenuController(
+                scanner, categoryRepository, expenditureRecordRepository, currentUser);
+            
+            // 啟動主選單
             menuController.start();
+            
         } catch (Exception e) {
             System.err.println("系統發生錯誤：" + e.getMessage());
             e.printStackTrace();
