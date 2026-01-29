@@ -1,8 +1,9 @@
 package com.example.presentation;
 
 import com.example.domain.model.User;
+import com.example.domain.repository.UserRepository;
+import com.example.infrastructure.persistence.InCSVUserRepository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -13,8 +14,7 @@ import java.util.Scanner;
 public class LoginController {
     private final Scanner scanner;
     private final LoginView view;
-
-    private List<User> users = new ArrayList<>();
+    private final UserRepository userRepository;
 
     // 預設的帳號密碼
     private static final int MAX_ATTEMPTS = 3;
@@ -22,11 +22,19 @@ public class LoginController {
     public LoginController(Scanner scanner) {
         this.scanner = scanner;
         this.view = new LoginView();
+        this.userRepository = new InCSVUserRepository();
+    }
 
-        users.add(new User("admin", "admin"));
-        users.add(new User("user", "user"));
-        users.add(new User("test", "test"));
-        users.add(new User("test2", "test2"));
+    /**
+     * 建構子：允許注入自訂的 UserRepository
+     * 
+     * @param scanner Scanner 物件
+     * @param userRepository 使用者儲存庫
+     */
+    public LoginController(Scanner scanner, UserRepository userRepository) {
+        this.scanner = scanner;
+        this.view = new LoginView();
+        this.userRepository = userRepository;
     }
 
     /**
@@ -77,8 +85,9 @@ public class LoginController {
      * @return 驗證成功返回 true，失敗返回 false
      */
     private boolean authenticate(String username, String password) {
-
-        for (User user : this.users) {
+        List<User> users = userRepository.findAll();
+        
+        for (User user : users) {
             if (user.getUsername().equalsIgnoreCase(username)
                     && user.getPassword().equalsIgnoreCase(password)) {
                 return true;
