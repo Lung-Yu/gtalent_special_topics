@@ -11,6 +11,7 @@ import java.util.List;
 
 import com.example.domain.model.User;
 import com.example.domain.repository.UserRepository;
+import com.example.infrastructure.util.CaesarCipher;
 
 /**
  * CSV 檔案實作的使用者儲存庫
@@ -28,17 +29,17 @@ public class InCSVUserRepository implements UserRepository {
      */
     public InCSVUserRepository(String filepath) {
         if (filepath == null || filepath.isEmpty()) {
-            filepath = "data/users.csv";
+            filepath = "accountApps/data/users.csv";
         }
         this.file = new File(filepath);
         initializeFileIfNeeded();
     }
 
     /**
-     * 建構子：使用預設路徑 data/users.csv
+     * 建構子：使用預設路徑 accountApps/data/users.csv
      */
     public InCSVUserRepository() {
-        this("data/users.csv");
+        this("accountApps/data/users.csv");
     }
 
     /**
@@ -61,19 +62,19 @@ public class InCSVUserRepository implements UserRepository {
                     file.getParentFile().mkdirs();
                 }
                 
-                // 創建檔案並寫入預設使用者
+                // 創建檔案並寫入預設使用者（密碼已加密）
                 try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
                     writer.write(HEADER);
                     writer.newLine();
                     
-                    // 寫入預設使用者
-                    writer.write("admin,admin");
+                    // 寫入預設使用者（密碼使用凱薩加密）
+                    writer.write("admin," + CaesarCipher.encrypt("admin"));
                     writer.newLine();
-                    writer.write("user,user");
+                    writer.write("user," + CaesarCipher.encrypt("user"));
                     writer.newLine();
-                    writer.write("test,test");
+                    writer.write("test," + CaesarCipher.encrypt("test"));
                     writer.newLine();
-                    writer.write("test2,test2");
+                    writer.write("test2," + CaesarCipher.encrypt("test2"));
                     writer.newLine();
                 }
             }
@@ -147,19 +148,23 @@ public class InCSVUserRepository implements UserRepository {
 
     /**
      * 將使用者物件轉換為 CSV 格式的字串
+     * 密碼會使用凱薩加密後再儲存
      * 
      * @param user 使用者物件
      * @return CSV 格式的字串
      */
     private String toCsvLine(User user) {
         String username = escapeCsvValue(user.getUsername());
-        String password = escapeCsvValue(user.getPassword());
+        // 將密碼加密後再儲存
+        String encryptedPassword = CaesarCipher.encrypt(user.getPassword());
+        String password = escapeCsvValue(encryptedPassword);
         
         return String.format("%s,%s", username, password);
     }
 
     /**
      * 將 CSV 格式的字串解析為使用者物件
+     * 密碼會從加密狀態解密
      * 
      * @param line CSV 格式的字串
      * @return 使用者物件，解析失敗則返回 null
@@ -173,7 +178,9 @@ public class InCSVUserRepository implements UserRepository {
             }
             
             String username = unescapeCsvValue(fields[0]);
-            String password = unescapeCsvValue(fields[1]);
+            String encryptedPassword = unescapeCsvValue(fields[1]);
+            // 將儲存的加密密碼解密
+            String password = CaesarCipher.decrypt(encryptedPassword);
             
             return new User(username, password);
         } catch (Exception e) {
