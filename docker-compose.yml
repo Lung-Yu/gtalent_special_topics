@@ -1,6 +1,37 @@
 version: '3.8'
+
 services:
   db:
-     image: mysql
-     environment:
-        MYSQL_ROOT_PASSWORD: 123456
+    image: mysql:8.0
+    container_name: northwind_mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-northwind}
+      MYSQL_USER: ${MYSQL_USER:-student}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-student123}
+    volumes:
+      # 數據持久化
+      - mysql_data:/var/lib/mysql
+      # SQL 初始化腳本（按字母順序執行）
+      - ./mysql-init:/docker-entrypoint-initdb.d:ro
+      # MySQL 自定義配置
+      - ./mysql-conf/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-123456}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - northwind_network
+
+networks:
+  northwind_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
