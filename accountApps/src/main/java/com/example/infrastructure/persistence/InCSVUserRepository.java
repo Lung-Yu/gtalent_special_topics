@@ -261,4 +261,15 @@ public class InCSVUserRepository implements UserRepository {
         
         return value;
     }
+    
+    @Override
+    public java.util.Optional<User> findByUsername(String username) {
+        if (username == null || username.trim().isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        
+        return findAll().stream()
+                .filter(user -> user.getUsername().equalsIgnoreCase(username))
+                .findFirst();
+    }
 }

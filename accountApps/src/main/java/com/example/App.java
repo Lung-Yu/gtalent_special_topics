@@ -3,8 +3,11 @@ package com.example;
 import com.example.domain.model.User;
 import com.example.domain.repository.CategoryRepository;
 import com.example.domain.repository.ExpenditureRecordRepository;
+import com.example.domain.repository.UserRepository;
 import com.example.infrastructure.persistence.InMemoryCategoryRepository;
 import com.example.infrastructure.persistence.InMemoryExpenditureRecordRepository;
+import com.example.infrastructure.persistence.MySQLUserRepository;
+import com.example.infrastructure.util.DatabaseConnectionFactory;
 import com.example.presentation.LoginController;
 import com.example.presentation.MenuController;
 import java.util.Scanner;
@@ -18,6 +21,7 @@ public class App {
     private MenuController menuController;
     private final CategoryRepository categoryRepository;
     private final ExpenditureRecordRepository expenditureRecordRepository;
+    private final UserRepository userRepository;
     private User currentUser;
 
     /**
@@ -27,6 +31,8 @@ public class App {
         this.scanner = new Scanner(System.in);
         this.categoryRepository = new InMemoryCategoryRepository();
         this.expenditureRecordRepository = new InMemoryExpenditureRecordRepository();
+        // 使用 MySQL 資料庫驗證
+        this.userRepository = new MySQLUserRepository();
     }
 
     /**
@@ -35,7 +41,7 @@ public class App {
     public void start() {
         try {
             // 執行登入流程
-            LoginController loginController = new LoginController(scanner);
+            LoginController loginController = new LoginController(scanner, userRepository);
             currentUser = loginController.login();
             
             if (currentUser == null) {
@@ -63,6 +69,8 @@ public class App {
         if (scanner != null) {
             scanner.close();
         }
+        // 關閉資料庫連接池
+        DatabaseConnectionFactory.closeDataSource();
     }
 
     /**

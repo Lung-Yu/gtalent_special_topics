@@ -4,7 +4,6 @@ import com.example.domain.model.User;
 import com.example.domain.repository.UserRepository;
 import com.example.infrastructure.persistence.InCSVUserRepository;
 
-import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -79,20 +78,15 @@ public class LoginController {
 
     /**
      * 驗證帳號密碼
+     * 使用優化的 findByUsername 方法提升效能
      * 
      * @param username 使用者帳號
      * @param password 使用者密碼
      * @return 驗證成功返回 true，失敗返回 false
      */
     private boolean authenticate(String username, String password) {
-        List<User> users = userRepository.findAll();
-        
-        for (User user : users) {
-            if (user.getUsername().equalsIgnoreCase(username)
-                    && user.getPassword().equalsIgnoreCase(password)) {
-                return true;
-            }
-        }
-        return false;
+        return userRepository.findByUsername(username)
+                .map(user -> user.getPassword().equalsIgnoreCase(password))
+                .orElse(false);
     }
 }
