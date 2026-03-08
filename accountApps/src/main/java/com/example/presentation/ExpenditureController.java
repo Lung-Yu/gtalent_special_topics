@@ -2,13 +2,17 @@ package com.example.presentation;
 
 import com.example.application.ExpenditureUseCase;
 import com.example.application.ExpenditureQueryUseCase;
+import com.example.application.QueryRecentExpendituresUseCase;
 import com.example.application.command.ExpenditureCommand;
 import com.example.application.command.ExpenditureQueryCommand;
+import com.example.application.command.QueryRecentExpendituresCommand;
 import com.example.domain.model.ExpenditureRecord;
 import com.example.domain.model.User;
 import com.example.domain.repository.CategoryRepository;
 import com.example.domain.repository.ExpenditureRecordRepository;
+import com.example.domain.repository.UserRepository;
 import com.example.domain.service.ConsumptionService;
+import com.example.domain.valueobject.PageResult;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -25,12 +29,14 @@ public class ExpenditureController {
     private final ExpenditureView view;
     private final ExpenditureUseCase expenditureUseCase;
     private final ExpenditureQueryUseCase queryUseCase;
+    private final QueryRecentExpendituresUseCase queryRecentUseCase;
     private final User currentUser;
     
     public ExpenditureController(
             Scanner scanner, 
             CategoryRepository categoryRepository,
             ExpenditureRecordRepository expenditureRecordRepository,
+            UserRepository userRepository,
             User currentUser) {
         this.scanner = scanner;
         this.view = new ExpenditureView();
@@ -38,6 +44,8 @@ public class ExpenditureController {
         ConsumptionService consumptionService = new ConsumptionService(expenditureRecordRepository);
         this.expenditureUseCase = new ExpenditureUseCase(consumptionService, categoryRepository);
         this.queryUseCase = new ExpenditureQueryUseCase(expenditureRecordRepository);
+        this.queryRecentUseCase = new QueryRecentExpendituresUseCase(
+            expenditureRecordRepository, userRepository);
         this.currentUser = currentUser;
     }
     
@@ -87,6 +95,9 @@ public class ExpenditureController {
                 return false;
             case CREATE:
                 handleCreateExpenditure();
+                break;
+            case VIEW_RECENT:
+                handleViewRecentExpenditures();
                 break;
             case VIEW_TODAY:
                 handleViewTodayExpenditure();
@@ -189,6 +200,58 @@ public class ExpenditureController {
             
         } catch (Exception e) {
             view.showErrorMessage("查詢記錄時發生錯誤：" + e.getMessage());
+        }
+    }
+    
+    /**
+     * 處理查看最近支出記錄（分頁）
+     */
+    private void handleViewRecentExpenditures() {
+        try {
+            view.showMessage("\n--- 最近支出記錄（分頁瀏覽）---");
+            
+            String cursor = null;
+            int pageSize = 20; // 預設每頁 20 筆
+            int pageNumber = 1;
+            boolean continueBrowsing = true;
+            
+            while (continueBrowsing) {
+                // 執行查詢
+                QueryRecentExpendituresCommand command = new QueryRecentExpendituresCommand(
+                    currentUser.getUsername(), cursor, pageSize);
+                
+                PageResult<ExpenditureRecord> result = queryRecentUseCase.execute(command);
+                
+                // 顯示結果
+                view.showMessage("\n第 " + pageNumber + " 頁 (共 " + result.getSize() + " 筆)");
+                view.showMessage("─".repeat(60));
+                view.showExpenditureRecords(result.getData());
+                view.showMessage("─".repeat(60));
+                
+                // 檢查是否有更多頁
+                if (result.hasMore()) {
+                    view.showMessage("\n[N] 下一頁 | [B] 返回");
+                    scanner.nextLine(); // 清除 buffer
+                    String choice = scanner.nextLine().trim().toUpperCase();
+                    
+                    if (choice.equals("N")) {
+                        cursor = result.getNextCursorString();
+                        pageNumber++;
+                    } else {
+                        continueBrowsing = false;
+                    }
+                } else {
+                    view.showMessage("\n已到最後一頁");
+                    view.showMessage("按 Enter 繼續...");
+                    scanner.nextLine(); // 清除 buffer
+                    scanner.nextLine();
+                    continueBrowsing = false;
+                }
+            }
+            
+        } catch (Exception e) {
+            view.showErrorMessage("查詢記錄時發生錯誤：" + e.getMessage());
+            e.printStackTrace();
         }
     }
     

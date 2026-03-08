@@ -6,6 +6,7 @@ import com.example.domain.repository.ExpenditureRecordRepository;
 import com.example.domain.repository.UserRepository;
 import com.example.infrastructure.persistence.InMemoryCategoryRepository;
 import com.example.infrastructure.persistence.InMemoryExpenditureRecordRepository;
+import com.example.infrastructure.persistence.MySQLExpenditureRecordRepository;
 import com.example.infrastructure.persistence.MySQLUserRepository;
 import com.example.infrastructure.util.DatabaseConnectionFactory;
 import com.example.presentation.LoginController;
@@ -26,13 +27,29 @@ public class App {
 
     /**
      * 建構子 - 初始化應用程式資源
+     * 可透過環境變數 USE_MYSQL_EXPENDITURE=true 切換支出記錄儲存方式
+     * - true: 使用 MySQL 資料庫（預設，支援 SQL 聚合優化）
+     * - false: 使用記憶體儲存（適合測試）
      */
     public App() {
         this.scanner = new Scanner(System.in);
         this.categoryRepository = new InMemoryCategoryRepository();
-        this.expenditureRecordRepository = new InMemoryExpenditureRecordRepository();
+        
         // 使用 MySQL 資料庫驗證
         this.userRepository = new MySQLUserRepository();
+        
+        // 根據環境變數決定使用哪種支出記錄儲存實作
+        String useMySQLExpenditure = System.getenv("USE_MYSQL_EXPENDITURE");
+        boolean shouldUseMySQLExpenditure = useMySQLExpenditure == null || 
+                                           !useMySQLExpenditure.equalsIgnoreCase("false");
+        
+        if (shouldUseMySQLExpenditure) {
+            this.expenditureRecordRepository = new MySQLExpenditureRecordRepository(userRepository);
+            System.out.println("✓ 使用 MySQL 儲存支出記錄（支援 SQL 聚合優化）");
+        } else {
+            this.expenditureRecordRepository = new InMemoryExpenditureRecordRepository();
+            System.out.println("✓ 使用記憶體儲存支出記錄");
+        }
     }
 
     /**
@@ -51,7 +68,7 @@ public class App {
             
             // 登入成功後初始化主選單控制器
             menuController = new MenuController(
-                scanner, categoryRepository, expenditureRecordRepository, currentUser);
+                scanner, categoryRepository, expenditureRecordRepository, userRepository, currentUser);
             
             // 啟動主選單
             menuController.start();

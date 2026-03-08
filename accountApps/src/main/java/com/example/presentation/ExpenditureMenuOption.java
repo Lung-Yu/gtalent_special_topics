@@ -6,7 +6,8 @@ package com.example.presentation;
 public enum ExpenditureMenuOption {
     BACK(0, "返回主選單"),
     CREATE(1, "新增支出記錄"),
-    VIEW_TODAY(2, "查看今日支出");
+    VIEW_TODAY(2, "查看今日支出"),
+    VIEW_RECENT(3, "查看最近支出記錄（分頁）");
     
     private final int code;
     private final String description;

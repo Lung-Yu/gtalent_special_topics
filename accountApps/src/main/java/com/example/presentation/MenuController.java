@@ -3,6 +3,7 @@ package com.example.presentation;
 import com.example.domain.model.User;
 import com.example.domain.repository.CategoryRepository;
 import com.example.domain.repository.ExpenditureRecordRepository;
+import com.example.domain.repository.UserRepository;
 import java.util.Scanner;
 
 /**
@@ -14,17 +15,20 @@ public class MenuController {
     private final MenuView view;
     private final CategoryRepository categoryRepository;
     private final ExpenditureRecordRepository expenditureRecordRepository;
+    private final UserRepository userRepository;
     private final User currentUser;
     
     public MenuController(
             Scanner scanner, 
             CategoryRepository categoryRepository,
             ExpenditureRecordRepository expenditureRecordRepository,
+            UserRepository userRepository,
             User currentUser) {
         this.scanner = scanner;
         this.view = new MenuView();
         this.categoryRepository = categoryRepository;
         this.expenditureRecordRepository = expenditureRecordRepository;
+        this.userRepository = userRepository;
         this.currentUser = currentUser;
     }
     
@@ -96,7 +100,7 @@ public class MenuController {
      */
     private void handleExpenditure() {
         ExpenditureController expenditureController = new ExpenditureController(
-            scanner, categoryRepository, expenditureRecordRepository, currentUser);
+            scanner, categoryRepository, expenditureRecordRepository, userRepository, currentUser);
         expenditureController.start();
     }
     
