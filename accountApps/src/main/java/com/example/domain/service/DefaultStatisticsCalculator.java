@@ -22,7 +22,7 @@ public class DefaultStatisticsCalculator implements StatisticsCalculator {
                     StatisticsCategory.food : StatisticsCategory.salary;
                 
                 // 建立唯一鍵：使用者名稱 + 類別
-                String key = record.getUser().getUsername() + "_" + category.name();
+                String key = record.getUsername() + "_" + category.name();
                 
                 if (pointMap.containsKey(key)) {
                     // 如果已存在，累加金額
@@ -32,7 +32,7 @@ public class DefaultStatisticsCalculator implements StatisticsCalculator {
                     // 如果不存在，創建新的 StatisticsPoint
                     StatisticsPoint point = new StatisticsPoint(
                         record.getMoney(),
-                        record.getUser(),
+                        record.getUserIdentity(),
                         LocalDateTime.now(),
                         category
                     );

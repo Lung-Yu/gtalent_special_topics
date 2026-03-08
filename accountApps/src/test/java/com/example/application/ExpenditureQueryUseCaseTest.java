@@ -16,6 +16,7 @@ import com.example.domain.model.ExpenditureRecord;
 import com.example.domain.model.User;
 import com.example.domain.repository.ExpenditureRecordRepository;
 import com.example.domain.valueobject.PaymentMethod;
+import com.example.domain.valueobject.UserIdentity;
 import com.example.infrastructure.persistence.InMemoryExpenditureRecordRepository;
 
 public class ExpenditureQueryUseCaseTest {
@@ -35,9 +36,9 @@ public class ExpenditureQueryUseCaseTest {
         userB = new User("userB");
 
         // Seed data for queries
-        repository.save(new ExpenditureRecord(userA, "breakfast", 120, Arrays.asList("food"), PaymentMethod.LinePay, LocalDate.of(2025, 12, 25)));
-        repository.save(new ExpenditureRecord(userA, "lunch", 250, Arrays.asList("food"), PaymentMethod.AppPay, LocalDate.of(2025, 12, 26)));
-        repository.save(new ExpenditureRecord(userB, "movie", 300, Arrays.asList("entertainment"), PaymentMethod.GooglePay, LocalDate.of(2025, 12, 25)));
+        repository.save(new ExpenditureRecord(UserIdentity.from(userA), "breakfast", 120, Arrays.asList("food"), PaymentMethod.LinePay, LocalDate.of(2025, 12, 25)));
+        repository.save(new ExpenditureRecord(UserIdentity.from(userA), "lunch", 250, Arrays.asList("food"), PaymentMethod.AppPay, LocalDate.of(2025, 12, 26)));
+        repository.save(new ExpenditureRecord(UserIdentity.from(userB), "movie", 300, Arrays.asList("entertainment"), PaymentMethod.GooglePay, LocalDate.of(2025, 12, 25)));
     }
 
     @Test
@@ -48,7 +49,7 @@ public class ExpenditureQueryUseCaseTest {
         List<ExpenditureRecord> results = queryUseCase.query(command);
 
         assertEquals(2, results.size());
-        assertTrue(results.stream().allMatch(record -> record.getUser().equals(userA)));
+        assertTrue(results.stream().allMatch(record -> record.getUsername().equals(userA.getUsername())));
     }
 
     @Test

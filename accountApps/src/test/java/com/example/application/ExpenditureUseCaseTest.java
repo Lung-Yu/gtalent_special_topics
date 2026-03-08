@@ -55,7 +55,7 @@ public class ExpenditureUseCaseTest {
         expenditureUseCase.execute(command);
 
         ExpenditureRecord saved = expenditureRecordRepository.findAll().get(0);
-        assertEquals(user1, saved.getUser());
+        assertEquals(user1.getUsername(), saved.getUsername());
         assertEquals(100, saved.getMoney());
         assertEquals(Arrays.asList("food"), saved.getCategory());
         assertNotNull(saved.getDate());
@@ -227,8 +227,8 @@ public class ExpenditureUseCaseTest {
         expenditureUseCase.execute(command2);
 
         assertEquals(2, expenditureRecordRepository.findAll().size());
-        assertEquals(user1, expenditureRecordRepository.findAll().get(0).getUser());
-        assertEquals(user2, expenditureRecordRepository.findAll().get(1).getUser());
+        assertEquals(user1.getUsername(), expenditureRecordRepository.findAll().get(0).getUsername());
+        assertEquals(user2.getUsername(), expenditureRecordRepository.findAll().get(1).getUsername());
     }
 
     @Test
