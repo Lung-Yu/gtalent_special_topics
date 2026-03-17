@@ -2,14 +2,17 @@
 
 > 💡 **使用方式：** 先嘗試自己寫出 SQL 查詢，完成後可參考 `mysql-init/06-practice-queries.sql` 查看參考答案
 
----
+> 🚀 **進階挑戰：** 完成基礎練習後，可以挑戰 [SQL_ADVANCED_PRACTICE.md](SQL_ADVANCED_PRACTICE.md) 中的專家級題目和實戰專案！
 
+---
+****
 ## 📋 目錄
 
 - [基礎題 (Level 1)](#基礎題-level-1) - 適合初學者
 - [中級題 (Level 2)](#中級題-level-2) - 需要理解 JOIN 和聚合
 - [進階題 (Level 3)](#進階題-level-3) - 需要複雜查詢和子查詢
 - [挑戰題 (Level 4)](#挑戰題-level-4) - 商業分析實戰
+- **[🚀 更多進階練習](SQL_ADVANCED_PRACTICE.md)** - Level 5-7 專家級與實戰專案
 
 ---
 
@@ -791,10 +794,18 @@ SELECT ... FROM ExpensiveProducts ...
 
 ## 🎓 評分標準
 
+### 基礎階段（本文件）
 - **基礎題 (1-1 到 1-20)**: 完成 15 題以上 → 及格
 - **中級題 (2-1 到 2-20)**: 完成 12 題以上 → 良好
 - **進階題 (3-1 到 3-12)**: 完成 8 題以上 → 優秀
 - **挑戰題 (4-1 到 4-15)**: 完成 10 題以上 → 卓越 🏆
+
+### 進階階段（進階練習文件）
+- **Level 5 專家級**: 完成 8 題以上 → 專家級 SQL 能力 ⭐⭐⭐
+- **Level 6 資料庫進階**: 完成 10 題以上 → 資料庫管理能力 ⭐⭐⭐⭐
+- **Level 7 實戰專案**: 完成 2 個以上 → 實戰能力認證 ⭐⭐⭐⭐⭐
+
+👉 **準備好挑戰更高難度？** 前往 [SQL_ADVANCED_PRACTICE.md](SQL_ADVANCED_PRACTICE.md)
 
 ---
 
@@ -815,6 +826,8 @@ SELECT ... FROM ExpensiveProducts ...
 - **參考答案**: `mysql-init/06-practice-queries.sql`
 - **資料庫說明**: `DATABASE_SETUP.md`
 - **索引效能測試**: `mysql-init/05-index-examples.sql`
+- **🚀 進階練習題**: [SQL_ADVANCED_PRACTICE.md](SQL_ADVANCED_PRACTICE.md) - 專家級分析、資料庫進階功能、實戰專案
+- **⚡ 效能優化教學**: [SQL_PERFORMANCE_TUTORIAL.md](SQL_PERFORMANCE_TUTORIAL.md) - 查詢效能優化實戰，包含完整測試資料生成
 
 ---
 
