@@ -3,6 +3,8 @@ package com.gtalent.helloworld.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,8 +40,8 @@ public class OrderService {
         return orderResp;
     }
 
-    public List<OrderResp> getOrders() {
-        List<OrderSummary> orders = orderRepository.findAll();
+    public List<OrderResp> getOrders(String name, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        List<OrderSummary> orders = orderRepository.findByStartDateTimeAndEndDateTime(name, startDateTime, endDateTime);
 
         List<OrderResp> orderResps = new ArrayList<>();
         for (OrderSummary order : orders) {

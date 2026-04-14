@@ -1,7 +1,12 @@
 package com.gtalent.helloworld.controller;
 
 import java.net.URI;
+import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
+
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -52,9 +57,15 @@ public class OrderController {
     }
 
     @GetMapping("/orders")
-    public List<OrderResp> getOrders() {
+    public List<OrderResp> getOrders(@RequestParam(value = "name", required = false) String name,
+                                     @RequestParam(value = "start", required = false) LocalDate start,
+                                     @RequestParam(value = "end", required = false) LocalDate end) {
         // Implementation for retrieving orders
-        return orderService.getOrders();
+
+       LocalDateTime startDateTime = start != null ? start.atStartOfDay() : null;
+       LocalDateTime endDateTime = end != null ? end.atTime(23,59, 59) : null;
+
+        return orderService.getOrders(name,startDateTime, endDateTime);
     
     }
 
