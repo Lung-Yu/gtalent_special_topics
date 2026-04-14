@@ -15,7 +15,7 @@ import com.gtalent.helloworld.repository.OrderSummary;
 
 @Service
 public class OrderService {
-    
+
     @Autowired
     private OrderRepository orderRepository;
 
@@ -26,9 +26,8 @@ public class OrderService {
         order.setQuantity(orderDto.getQuantity());
         order.setPrice(orderDto.getPrice());
 
-
         Order savedOrder = orderRepository.save(order);
-        
+
         OrderResp orderResp = new OrderResp();
         orderResp.setId(savedOrder.getId());
         orderResp.setName(savedOrder.getName());
@@ -41,7 +40,14 @@ public class OrderService {
     }
 
     public List<OrderResp> getOrders(String name, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        List<OrderSummary> orders = orderRepository.findByStartDateTimeAndEndDateTime(name, startDateTime, endDateTime);
+
+        List<OrderSummary> orders = new ArrayList<>();
+        
+        if (name == null && startDateTime == null && endDateTime == null) {
+            orders = orderRepository.findAll();
+        } else {
+            orders = orderRepository.findByStartDateTimeAndEndDateTime(name, startDateTime, endDateTime);
+        }
 
         List<OrderResp> orderResps = new ArrayList<>();
         for (OrderSummary order : orders) {
