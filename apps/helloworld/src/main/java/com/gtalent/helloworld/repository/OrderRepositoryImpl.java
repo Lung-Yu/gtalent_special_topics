@@ -1,11 +1,15 @@
 package com.gtalent.helloworld.repository;
 
+import java.util.List;
+
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
 
 import com.gtalent.helloworld.service.Order;
 
-@Repository
 public interface OrderRepositoryImpl extends CrudRepository<Order, Integer> {
+
+    @Query(value = "SELECT id, name FROM orders", nativeQuery = true)
+    List<OrderSummary> findAllIdAndName();
 
 }

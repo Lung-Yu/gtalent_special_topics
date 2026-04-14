@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.gtalent.helloworld.controller.req.OrderReq;
 import com.gtalent.helloworld.controller.resp.OrderResp;
 import com.gtalent.helloworld.repository.OrderRepository;
+import com.gtalent.helloworld.repository.OrderSummary;
 
 @Service
 public class OrderService {
@@ -31,24 +32,20 @@ public class OrderService {
         orderResp.setName(savedOrder.getName());
         orderResp.setQuantity(savedOrder.getQuantity());
         orderResp.setPrice(savedOrder.getPrice());
-        orderResp.setCreatedAt(savedOrder.getCreatedAt());
-        orderResp.setUpdatedAt(savedOrder.getUpdatedAt());
+        // orderResp.setCreatedAt(savedOrder.getCreatedAt());
+        // orderResp.setUpdatedAt(savedOrder.getUpdatedAt());
 
         return orderResp;
     }
 
     public List<OrderResp> getOrders() {
-        List<Order> orders = orderRepository.findAll();
+        List<OrderSummary> orders = orderRepository.findAll();
 
         List<OrderResp> orderResps = new ArrayList<>();
-        for (Order order : orders) {
+        for (OrderSummary order : orders) {
             OrderResp orderResp = new OrderResp();
             orderResp.setId(order.getId());
             orderResp.setName(order.getName());
-            orderResp.setQuantity(order.getQuantity());
-            orderResp.setPrice(order.getPrice());
-            orderResp.setCreatedAt(order.getCreatedAt());
-            orderResp.setUpdatedAt(order.getUpdatedAt());
             orderResps.add(orderResp);
         }
         return orderResps;
@@ -64,8 +61,8 @@ public class OrderService {
         orderResp.setName(order.getName());
         orderResp.setQuantity(order.getQuantity());
         orderResp.setPrice(order.getPrice());
-        orderResp.setCreatedAt(order.getCreatedAt());
-        orderResp.setUpdatedAt(order.getUpdatedAt());
+        // orderResp.setCreatedAt(order.getCreatedAt());
+        // orderResp.setUpdatedAt(order.getUpdatedAt());
         return orderResp;
     }
 
@@ -88,8 +85,8 @@ public class OrderService {
         orderResp.setName(updatedOrder.getName());
         orderResp.setQuantity(updatedOrder.getQuantity());
         orderResp.setPrice(updatedOrder.getPrice());
-        orderResp.setCreatedAt(updatedOrder.getCreatedAt());
-        orderResp.setUpdatedAt(updatedOrder.getUpdatedAt());
+        // orderResp.setCreatedAt(updatedOrder.getCreatedAt());
+        // orderResp.setUpdatedAt(updatedOrder.getUpdatedAt());
 
         return orderResp;
     }

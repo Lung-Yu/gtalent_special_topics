@@ -1,6 +1,5 @@
 package com.gtalent.helloworld.repository;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +28,10 @@ public class OrderRepository {
         return orderRepositoryImpl.save(order);
     }
 
-    public List<Order> findAll() {
+    public List<OrderSummary> findAll() {
 
         // return this.orders;
-        return (List<Order>) orderRepositoryImpl.findAll();
+        return orderRepositoryImpl.findAllIdAndName();
     }
 
     public Order findById(int id) {
