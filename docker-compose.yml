@@ -18,9 +18,9 @@ services:
       # 數據持久化
       - mysql_data:/var/lib/mysql
       # SQL 初始化腳本（按字母順序執行）
-      - ./mysql-init:/docker-entrypoint-initdb.d:ro
+      - ./database/init-scripts:/docker-entrypoint-initdb.d:ro
       # MySQL 自定義配置
-      - ./mysql-conf/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+      - ./database/config/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-123456}"]
       interval: 10s

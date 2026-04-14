@@ -1,0 +1,23 @@
+[
+  {
+    "name": "薪水",
+    "icon": "💰",
+    "type": "INCOME",
+    "createdAt": "2026-03-05T21:15:05.898433",
+    "createdBy": "alice"
+  },
+  {
+    "name": "午餐",
+    "icon": "🍱",
+    "type": "OUTCOME",
+    "createdAt": "2026-03-05T21:15:05.900290",
+    "createdBy": "alice"
+  },
+  {
+    "name": "獎金",
+    "icon": "🎁",
+    "type": "INCOME",
+    "createdAt": "2026-03-05T21:15:05.906312",
+    "createdBy": "alice"
+  }
+]

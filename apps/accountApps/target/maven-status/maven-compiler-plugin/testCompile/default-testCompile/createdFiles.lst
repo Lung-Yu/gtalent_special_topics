@@ -1,0 +1,15 @@
+com/example/infrastructure/persistence/PaginationPerformanceComparisonTest$PerformanceMetrics.class
+com/example/infrastructure/persistence/PaginationPerformanceComparisonTest.class
+com/example/AppTest.class
+com/example/domain/valueobject/CursorTest.class
+com/example/TestInventoryRepository.class
+com/example/infrastructure/persistence/MySQLUserRepositoryTest.class
+com/example/application/CategoryUseCaseTest.class
+com/example/infrastructure/persistence/MySQLExpenditureRecordRepositoryTest.class
+com/example/application/CategoryUseCaseTestJson.class
+com/example/application/ExpenditureUseCaseTest.class
+com/example/application/CategoryUseCaseTestJsonLib.class
+com/example/application/CategoryUseCaseTestCSV.class
+com/example/application/ExpenditureQueryUseCaseTest.class
+com/example/domain/valueobject/PageResultTest.class
+com/example/application/DailyConsumptionStatisticsUseCaseTest.class
