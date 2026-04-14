@@ -5,15 +5,20 @@ import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
 
-
+@NamedEntityGraph(
+    name = "User.products",
+    attributeNodes = @NamedAttributeNode("products")
+)
 @Entity
 public class User {
     
@@ -26,7 +31,7 @@ public class User {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @JsonBackReference 
+    @JsonIgnoreProperties({"createdBy"})
     @OneToMany(mappedBy="createdBy")
     private List<Product> products;
 

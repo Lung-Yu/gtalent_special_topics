@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,6 +25,7 @@ public class Product {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @JsonIgnoreProperties({"products"})
     @ManyToOne
     private User createdBy;
     
