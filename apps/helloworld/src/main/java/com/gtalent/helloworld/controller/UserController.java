@@ -26,13 +26,14 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @RestController
+@RequestMapping("v1/users")
 public class UserController {
     
     @Autowired
     private UserService userService;
 
 
-    @PostMapping("/users")
+    @PostMapping
     public User createUser(@Valid @RequestBody UserCreationReq user_req) {
         // Implementation for creating a new user
         User user = new User();
@@ -43,26 +44,26 @@ public class UserController {
         return userService.createUser(user);
     }
 
-    @DeleteMapping("/users/{id}")
+    @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
         // Implementation for deleting a user
         userService.deleteUser(id);
     }
     
-    @PutMapping("/users/{id}")
+    @PutMapping("/{id}")
     public User updateUser(@PathVariable Long id, @RequestBody User user) {
         // Implementation for updating an existing user
         user.setId(id);
         return userService.updateUser(user);
     }
 
-    @GetMapping("/users")
+    @GetMapping
     public List<User> getUsers() {
         // Implementation for retrieving users
         return userService.getUsers();
     }
 
-    @GetMapping("/users/{id}")
+    @GetMapping("/{id}")
     public User getUserById(@PathVariable Long id) {
         // Implementation for retrieving a specific user by ID
         return userService.getUserById(id);
