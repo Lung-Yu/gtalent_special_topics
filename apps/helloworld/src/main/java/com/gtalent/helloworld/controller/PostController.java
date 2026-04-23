@@ -1,7 +1,9 @@
 package com.gtalent.helloworld.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -41,9 +43,13 @@ public class PostController {
     }
 
     // Read all
+
+    // ?page=0&size=10&sort=createdAt,desc
     @GetMapping
-    public List<Post> findAll() {
-        return postRepository.findAll();
+    public Page<Post> findAll(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+                
+        return postRepository.findAll(pageable);
     }
 
     // Read one
