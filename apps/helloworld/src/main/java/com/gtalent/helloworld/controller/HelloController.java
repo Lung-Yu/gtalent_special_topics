@@ -1,6 +1,7 @@
 package com.gtalent.helloworld.controller;
 
 import com.gtalent.helloworld.service.ProductService;
+import com.gtalent.helloworld.service.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,6 +25,9 @@ public class HelloController {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @GetMapping("/hello")
     public String hello(Model model) {
         String userName = NAMES.get(RANDOM.nextInt(NAMES.size()));
@@ -39,7 +43,8 @@ public class HelloController {
         String userName = NAMES.get(RANDOM.nextInt(NAMES.size()));
         model.addAttribute("userName", userName);
         model.addAttribute("allProducts", productService.getProducts());
-        if ("admin".equals(account) && "admin".equals(password)) {
+        boolean found = userRepository.findByUsernameAndPassword(account, password).isPresent();
+        if (found) {
             model.addAttribute("loginMessage", "登入成功！歡迎，" + account);
             model.addAttribute("loginSuccess", true);
         } else {

@@ -20,4 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @EntityGraph(value = "User.products")
     Optional<User> findById(Long id);
 
+    Optional<User> findByUsernameAndPassword(String username, String password);
+
 }
