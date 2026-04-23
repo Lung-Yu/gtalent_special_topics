@@ -7,6 +7,15 @@
 <body>
     <h1>Hello, <span th:text="${userName}">User</span>!</h1>
 
+    <form method="post" action="/hello">
+        <label>帳號：<input type="text" name="account" /></label><br/>
+        <label>密碼：<input type="password" name="password" /></label><br/>
+        <button type="submit">登入</button>
+    </form>
+
+    <p th:if="${loginMessage}" th:text="${loginMessage}"
+       th:style="${loginSuccess} ? 'color:green' : 'color:red'"></p>
+
     <table border="1">
         <thead>
             <tr>

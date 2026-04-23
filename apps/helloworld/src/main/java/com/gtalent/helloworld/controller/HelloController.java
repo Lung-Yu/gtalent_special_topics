@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Random;
@@ -27,6 +29,23 @@ public class HelloController {
         String userName = NAMES.get(RANDOM.nextInt(NAMES.size()));
         model.addAttribute("userName", userName);
         model.addAttribute("allProducts", productService.getProducts());
+        return "hello";
+    }
+
+    @PostMapping("/hello")
+    public String login(@RequestParam String account,
+                        @RequestParam String password,
+                        Model model) {
+        String userName = NAMES.get(RANDOM.nextInt(NAMES.size()));
+        model.addAttribute("userName", userName);
+        model.addAttribute("allProducts", productService.getProducts());
+        if ("admin".equals(account) && "admin".equals(password)) {
+            model.addAttribute("loginMessage", "登入成功！歡迎，" + account);
+            model.addAttribute("loginSuccess", true);
+        } else {
+            model.addAttribute("loginMessage", "帳號或密碼錯誤，請重試。");
+            model.addAttribute("loginSuccess", false);
+        }
         return "hello";
     }
 
