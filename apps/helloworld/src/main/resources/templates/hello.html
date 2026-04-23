@@ -1,10 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Hello</title>
 </head>
 <body>
-    <h1>Hello World！</h1>
+    <h1>Hello, <span th:text="${userName}">User</span>!</h1>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="prod : ${allProducts}">
+                <td th:text="${prod.name}">Sample Name</td>
+                <td th:text="${#numbers.formatDecimal(prod.price, 1, 2)}">0.00</td>
+            </tr>
+        </tbody>
+    </table>
+
 </body>
 </html>
