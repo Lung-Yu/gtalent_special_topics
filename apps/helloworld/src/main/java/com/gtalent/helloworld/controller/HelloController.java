@@ -1,13 +1,10 @@
 package com.gtalent.helloworld.controller;
 
 import com.gtalent.helloworld.service.ProductService;
-import com.gtalent.helloworld.service.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Random;
@@ -25,9 +22,11 @@ public class HelloController {
     @Autowired
     private ProductService productService;
 
-    @Autowired
-    private UserRepository userRepository;
-
+    /**
+     * 此路徑受 Spring Security 保護：未登入會自動轉址到 /login。
+     * 登入後 Spring Security 的 Session 中已有身份資料，
+     * 使用者名稱由 hello.html 透過 sec:authentication="name" 直接從 SecurityContext 取得。
+     */
     @GetMapping("/hello")
     public String hello(Model model) {
         String userName = NAMES.get(RANDOM.nextInt(NAMES.size()));
@@ -35,23 +34,4 @@ public class HelloController {
         model.addAttribute("allProducts", productService.getProducts());
         return "hello";
     }
-
-    @PostMapping("/hello")
-    public String login(@RequestParam String account,
-                        @RequestParam String password,
-                        Model model) {
-        String userName = NAMES.get(RANDOM.nextInt(NAMES.size()));
-        model.addAttribute("userName", userName);
-        model.addAttribute("allProducts", productService.getProducts());
-        boolean found = userRepository.findByUsernameAndPassword(account, password).isPresent();
-        if (found) {
-            model.addAttribute("loginMessage", "登入成功！歡迎，" + account);
-            model.addAttribute("loginSuccess", true);
-        } else {
-            model.addAttribute("loginMessage", "帳號或密碼錯誤，請重試。");
-            model.addAttribute("loginSuccess", false);
-        }
-        return "hello";
-    }
-
 }

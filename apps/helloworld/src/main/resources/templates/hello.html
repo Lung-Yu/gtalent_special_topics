@@ -1,20 +1,55 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-TW"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Hello</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .user-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f0f2f5;
+            padding: 10px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .logout-btn {
+            padding: 7px 16px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .logout-btn:hover { background: #c0392b; }
+    </style>
 </head>
 <body>
+
+    <!--
+        th:sec:authentication="name"：由 thymeleaf-extras-springsecurity6 提供，
+        從 Spring Security 的 SecurityContext（Session）中讀取目前登入的使用者名稱。
+    -->
+    <div class="user-bar">
+        <span>
+            目前登入：<strong sec:authentication="name">使用者</strong>
+            &nbsp;（角色：<span sec:authentication="principal.authorities">-</span>）
+        </span>
+
+        <!--
+            登出使用 POST 方法，Thymeleaf th:action 自動注入 CSRF Token，
+            Spring Security 攔截 POST /logout，清除 Session 後轉址 /login?logout。
+        -->
+        <form th:action="@{/logout}" method="post" style="margin:0">
+            <button type="submit" class="logout-btn">登出</button>
+        </form>
+    </div>
+
     <h1>Hello, <span th:text="${userName}">User</span>!</h1>
-
-    <form method="post" action="/hello">
-        <label>帳號：<input type="text" name="account" /></label><br/>
-        <label>密碼：<input type="password" name="password" /></label><br/>
-        <button type="submit">登入</button>
-    </form>
-
-    <p th:if="${loginMessage}" th:text="${loginMessage}"
-       th:style="${loginSuccess} ? 'color:green' : 'color:red'"></p>
 
     <table border="1">
         <thead>
