@@ -2,8 +2,10 @@ package com.gtalent.helloworld.config;
 
 import com.gtalent.helloworld.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -68,8 +70,13 @@ public class SecurityConfig {
 
     /**
      * Security Filter Chain：定義存取規則、登入登出設定、Session 管理。
+     *
+     * 僅在 app.auth.mode=session（預設）時載入。
+     * JWT mode 下此 chain 不會被建立，由 JwtSecurityConfig 接管。
      */
     @Bean
+    @Order(2)
+    @ConditionalOnProperty(name = "app.auth.mode", havingValue = "session", matchIfMissing = true)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authenticationProvider(authenticationProvider())
