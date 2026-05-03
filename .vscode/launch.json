@@ -6,13 +6,6 @@
             "name": "HelloworldApplication",
             "request": "launch",
             "mainClass": "com.gtalent.helloworld.HelloworldApplication",
-            "projectName": ""
-        },
-        {
-            "type": "java",
-            "name": "HelloworldApplication",
-            "request": "launch",
-            "mainClass": "com.gtalent.helloworld.HelloworldApplication",
             "projectName": "helloworld",
             "cwd": "${workspaceFolder}/apps/helloworld"
         }
