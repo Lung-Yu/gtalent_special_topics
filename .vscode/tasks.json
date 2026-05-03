@@ -1,0 +1,16 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "maven: compile helloworld",
+            "type": "shell",
+            "command": "mvn compile -f apps/helloworld/pom.xml",
+            "group": "build",
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            },
+            "problemMatcher": "$javac"
+        }
+    ]
+}
