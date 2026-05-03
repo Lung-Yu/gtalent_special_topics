@@ -47,6 +47,8 @@ public class JwtSecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 登入端點公開（取 token 用）
                 .requestMatchers("/auth/login").permitAll()
+                // REST API 端點公開（無需 JWT）
+                .requestMatchers("/v1/**", "/v2/**").permitAll()
                 // 其餘所有路徑需要有效 JWT
                 .anyRequest().authenticated()
             )
