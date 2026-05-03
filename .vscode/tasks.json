@@ -4,7 +4,7 @@
         {
             "label": "maven: compile helloworld",
             "type": "shell",
-            "command": "mvn compile -f apps/helloworld/pom.xml",
+            "command": "mvn compile dependency:build-classpath -Dmdep.outputFile=target/cp.txt -f apps/helloworld/pom.xml",
             "group": "build",
             "presentation": {
                 "reveal": "silent",

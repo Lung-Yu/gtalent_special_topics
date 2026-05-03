@@ -1,6 +1,9 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "interactive",
-    "java.debug.settings.onBuildFailureProceed": true,
-    "java.import.maven.enabled": true
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.debug.settings.onBuildFailureProceed": false,
+    "java.import.maven.enabled": true,
+    "java.import.maven.projectPomPaths": [
+        "apps/helloworld/pom.xml"
+    ]
 }

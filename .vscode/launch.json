@@ -6,13 +6,13 @@
             "name": "HelloworldApplication",
             "request": "launch",
             "mainClass": "com.gtalent.helloworld.HelloworldApplication",
-            "projectName": "helloworld",
             "cwd": "${workspaceFolder}/apps/helloworld",
             "preLaunchTask": "maven: compile helloworld",
             "classPaths": [
                 "${workspaceFolder}/apps/helloworld/target/classes",
-                "${workspaceFolder}/apps/helloworld/target/dependency/*"
-            ]
+                "$MavenDependencies"
+            ],
+            "vmArgs": "-Dspring.profiles.active=default"
         }
     ]
 }
