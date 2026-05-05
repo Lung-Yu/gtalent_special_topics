@@ -2,6 +2,7 @@ package com.gtalent.helloworld.config;
 
 import com.gtalent.helloworld.security.jwt.JwtAuthenticationFilter;
 import com.gtalent.helloworld.security.jwt.JwtUtil;
+import jakarta.servlet.http.Cookie;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -61,6 +62,20 @@ public class JwtSecurityConfig {
             .addFilterBefore(
                 new JwtAuthenticationFilter(jwtUtil),
                 UsernamePasswordAuthenticationFilter.class
+            )
+
+            // ── 登出：清除 HttpOnly Cookie jwt，導向 /login ────────
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .addLogoutHandler((request, response, auth) -> {
+                    Cookie cookie = new Cookie("jwt", null);
+                    cookie.setMaxAge(0);
+                    cookie.setPath("/");
+                    cookie.setHttpOnly(true);
+                    response.addCookie(cookie);
+                })
+                .logoutSuccessUrl("/login")
+                .permitAll()
             );
 
         return http.build();
