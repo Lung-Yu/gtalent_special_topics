@@ -29,6 +29,9 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<!-- Override versions to fix critical/high CVEs -->
+		<thymeleaf.version>3.1.4.RELEASE</thymeleaf.version>
+		<tomcat.version>10.1.54</tomcat.version>
 	</properties>
 
 
