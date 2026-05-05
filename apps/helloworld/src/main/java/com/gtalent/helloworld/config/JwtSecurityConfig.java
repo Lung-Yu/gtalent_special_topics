@@ -46,8 +46,8 @@ public class JwtSecurityConfig {
 
             // ── 存取控制 ──────────────────────────────────────────
             .authorizeHttpRequests(auth -> auth
-                // 登入端點公開（帳密驗證 + 2FA 驗證）
-                .requestMatchers("/auth/login", "/auth/verify").permitAll()
+                // 登入端點公開（帳密驗證 + 2FA 驗證 + 驗證碼刷新）
+                .requestMatchers("/auth/login", "/auth/verify", "/auth/refresh-code").permitAll()
                 // REST API 端點公開（無需 JWT）
                 .requestMatchers("/v1/**", "/v2/**").permitAll()
                 // 靜態資源與登入頁公開
