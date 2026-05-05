@@ -109,4 +109,21 @@ public class AuthController {
 
         return ResponseEntity.ok(new LoginRes(token));
     }
+
+    /**
+     * Step 2 輔助：在 pending 期間重新產生驗證碼（前端倒數到期自動呼叫）。
+     * 只接受仍在 pending 狀態的 username，防止任意人重置他人的 code。
+     */
+    @PostMapping("/refresh-code")
+    public ResponseEntity<?> refreshCode(@RequestBody java.util.Map<String, String> body) {
+        String username = body.get("username");
+        if (username == null || username.isBlank()) {
+            return ResponseEntity.badRequest().body("缺少 username");
+        }
+        if (!pendingAuthService.isPending(username)) {
+            return ResponseEntity.status(401).body("請先完成帳密驗證");
+        }
+        String code = verifyCodeService.generateVerifyCode(username);
+        return ResponseEntity.ok(new LoginInitRes("MFA_REQUIRED", code));
+    }
 }

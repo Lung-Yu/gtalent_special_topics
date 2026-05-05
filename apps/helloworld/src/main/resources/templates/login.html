@@ -74,7 +74,29 @@
             padding: 12px;
             border: 2px dashed #4a90e2;
             border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .countdown-wrap {
             margin-bottom: 18px;
+        }
+        .countdown-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: #e8e8e8;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s linear, background-color 0.5s;
         }
     </style>
 </head>
@@ -101,6 +123,17 @@
     <div id="step2" class="step">
         <p class="hint">帳密驗證通過，請輸入以下 6 位數驗證碼完成登入：</p>
         <div id="code-display" class="code-display">------</div>
+
+        <!-- 倒數 Progress 條 -->
+        <div class="countdown-wrap">
+            <div class="countdown-label">
+                <span>驗證碼有效時間</span>
+                <span id="countdown-sec">60s</span>
+            </div>
+            <div class="progress-track">
+                <div id="progress-bar" class="progress-bar" style="width:100%;background:#27ae60"></div>
+            </div>
+        </div>
 
         <label for="otp">驗證碼</label>
         <input type="text" id="otp" name="otp"
@@ -143,9 +176,9 @@
             const data = await res.json();
             if (data.status === 'MFA_REQUIRED') {
                 pendingUsername = username;
-                // 顯示產生的驗證碼（開發/展示用）
-                document.getElementById('code-display').textContent = data.verifyCode;
+                updateCode(data.verifyCode);
                 showStep(2);
+                startCountdown();
                 showMsg('請輸入驗證碼以完成登入。', 'info');
                 document.getElementById('otp').focus();
             }
@@ -211,6 +244,58 @@
         const el = document.getElementById('msg');
         el.className = 'alert alert-' + type;
         el.textContent = text;
+    }
+
+    function updateCode(code) {
+        document.getElementById('code-display').textContent = code;
+    }
+
+    // ── 倒數計時 + 自動刷新 ──────────────────────────────────────
+    let countdownTimer = null;
+
+    function startCountdown() {
+        if (countdownTimer) clearInterval(countdownTimer);
+        tick(); // 立即執行一次
+        countdownTimer = setInterval(tick, 1000);
+    }
+
+    function tick() {
+        // 當前 TOTP window 的剩餘秒數（對齊伺服器的 timeStep = seconds/60）
+        const nowSec   = Math.floor(Date.now() / 1000);
+        const remaining = 60 - (nowSec % 60);
+        const pct       = (remaining / 60) * 100;
+
+        // 更新文字
+        document.getElementById('countdown-sec').textContent = remaining + 's';
+
+        // 更新 progress bar 寬度與顏色
+        const bar = document.getElementById('progress-bar');
+        bar.style.width = pct + '%';
+        if (remaining > 30)       bar.style.backgroundColor = '#27ae60'; // 綠
+        else if (remaining > 15)  bar.style.backgroundColor = '#f39c12'; // 橘
+        else                      bar.style.backgroundColor = '#e74c3c'; // 紅
+
+        // 整分換新時（remaining == 60 表示剛剛整分），自動向後端取新驗證碼
+        if (remaining === 60) {
+            refreshCode();
+        }
+    }
+
+    async function refreshCode() {
+        if (!pendingUsername) return;
+        try {
+            const res = await fetch('/auth/refresh-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: pendingUsername })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                updateCode(data.verifyCode);
+                showMsg('驗證碼已更新，請重新輸入。', 'info');
+                document.getElementById('otp').value = '';
+            }
+        } catch (e) { /* 靜默失敗，舊碼仍可用 */ }
     }
 </script>
 </body>
