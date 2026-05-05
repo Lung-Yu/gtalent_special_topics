@@ -43,7 +43,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
             String username = jwtUtil.getUsernameFromToken(token);
 
-            // 建立已認證的 Authentication 物件（不需再查 DB）
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             username,
@@ -58,12 +57,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 從 request header 解出 Bearer token，若格式不符回傳 null。
+     * 優先從 Authorization: Bearer header 取 token，
+     * 其次從 HttpOnly Cookie "jwt" 取（瀏覽器登入用）。
      */
     private String extractToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
         if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
             return header.substring(7);
+        }
+        // 從 Cookie 取（瀏覽器自動帶）
+        if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("jwt".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
         }
         return null;
     }
