@@ -28,11 +28,7 @@ public class VerifyCodeController {
     }
 
     @PostMapping("/validate")
-    public boolean validateVerifyCode(@RequestBody String code) {
-        // 這裡應該從資料庫中取出與 username 綁
-        // 定的驗證碼，並與傳入的 code 比對。
-        // 為了簡化示例，這裡直接比對固定的驗
-        // 證碼，實際應用中請勿這麼做。
-        return verifyCodeService.validateVerifyCode(code);
+    public boolean validateVerifyCode(@RequestBody ValidateCodeRequest request) {
+        return verifyCodeService.validateVerifyCode(request.code());
     }
 }
