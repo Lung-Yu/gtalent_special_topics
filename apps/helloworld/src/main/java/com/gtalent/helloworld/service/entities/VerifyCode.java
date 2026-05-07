@@ -31,6 +31,10 @@ public class VerifyCode {
     @Column(nullable = false)
     private LocalDateTime lastUpdatedAt;
 
+    /** 上一次為此 serviceId 產生的 6 位數 code，用於避免連續重複。第一次產生時為 null。 */
+    @Column(nullable = true)
+    private String lastCode;
+
     public long getId() { return id; }
     public void setId(long id) { this.id = id; }
 
@@ -42,4 +46,7 @@ public class VerifyCode {
 
     public LocalDateTime getLastUpdatedAt() { return lastUpdatedAt; }
     public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) { this.lastUpdatedAt = lastUpdatedAt; }
+
+    public String getLastCode() { return lastCode; }
+    public void setLastCode(String lastCode) { this.lastCode = lastCode; }
 }

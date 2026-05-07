@@ -98,15 +98,29 @@ public class VerifyCodeService {
      * @return 6 位數 TOTP code
      */
     public String generateVerifyCode(String serviceId) {
-        String secret = generateSecret();
+        // 取得前次 code，用於碰撞比對
+        String previousCode = verifyCodeRepository
+                .findTopByServiceIdOrderByLastUpdatedAtDesc(serviceId)
+                .map(VerifyCode::getLastCode)
+                .orElse(null);
+
+        // Rejection Sampling：確保新 code 與上一次不同
+        String secret;
+        String code;
+        long timeStep = currentTimeStep();
+        do {
+            secret = generateSecret();
+            code = computeCode(secret, timeStep);
+        } while (code.equals(previousCode));
 
         VerifyCode entity = new VerifyCode();
         entity.setSecret(secret);
         entity.setServiceId(serviceId);
         entity.setLastUpdatedAt(LocalDateTime.now());
+        entity.setLastCode(code);
         verifyCodeRepository.save(entity);
 
-        return computeCode(secret, currentTimeStep());
+        return code;
     }
 
     /** 以預設服務產生驗證碼（向下相容） */
