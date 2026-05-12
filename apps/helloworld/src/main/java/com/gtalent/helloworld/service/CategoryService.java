@@ -50,9 +50,7 @@ public class CategoryService {
                 .orElseThrow(() -> new IllegalArgumentException("找不到分類 id=" + id));
         category.setName(name);
         category.setIcon(icon);
-        if (type != null) {
-            category.setType(type);
-        }
+        category.setType(type);
         return categoryRepository.save(category);
     }
 
