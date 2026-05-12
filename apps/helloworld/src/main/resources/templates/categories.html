@@ -38,13 +38,16 @@
                     <thead class="table-dark">
                         <tr>
                             <th>#</th>
+                            <th>圖示</th>
                             <th>名稱</th>
                             <th>類型</th>
+                            <th>建立者</th>
+                            <th>建立時間</th>
                             <th>操作</th>
                         </tr>
                     </thead>
                     <tbody id="category-tbody">
-                        <tr><td colspan="4" class="text-center py-4 text-muted">載入中...</td></tr>
+                        <tr><td colspan="7" class="text-center py-4 text-muted">載入中...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -66,15 +69,19 @@
             <div class="modal-body">
                 <input type="hidden" id="editId">
                 <div class="mb-3">
-                    <label class="form-label">分類名稱</label>
+                    <label class="form-label">分類名稱 <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="inputName" placeholder="請輸入名稱">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">類型</label>
+                    <label class="form-label">類型 <span class="text-danger">*</span></label>
                     <select class="form-select" id="inputType">
                         <option value="INCOME">收入 (INCOME)</option>
                         <option value="OUTCOME">支出 (OUTCOME)</option>
                     </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">圖示 <span class="text-muted small">（選填，可輸入 emoji 或圖示代碼）</span></label>
+                    <input type="text" class="form-control" id="inputIcon" placeholder="例如：🍔 或 food">
                 </div>
             </div>
             <div class="modal-footer">
@@ -134,17 +141,22 @@
     function renderTable(data) {
         const tbody = document.getElementById('category-tbody');
         if (!data.content || data.content.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">無資料</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">無資料</td></tr>';
             return;
         }
         tbody.innerHTML = data.content.map((c, i) => `
             <tr>
                 <td>${data.number * data.size + i + 1}</td>
+                <td class="fs-5">${c.icon ? escHtml(c.icon) : '<span class="text-muted">—</span>'}</td>
                 <td>${escHtml(c.name)}</td>
                 <td><span class="badge ${c.type === 'INCOME' ? 'bg-success' : 'bg-danger'}">${c.type === 'INCOME' ? '收入' : '支出'}</span></td>
+                <td>${c.createdByUsername ? escHtml(c.createdByUsername) : '<span class="text-muted">—</span>'}</td>
+                <td class="text-muted small">${c.createdAt ? c.createdAt.replace('T', ' ').substring(0, 16) : '—'}</td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(${c.id}, '${escJs(c.name)}', '${c.type}')">編輯</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="openDeleteModal(${c.id}, '${escJs(c.name)}')">刪除</button>
+                    <button class="btn btn-sm btn-outline-primary me-1"
+                        onclick="openEditModal(${c.id}, '${escJs(c.name)}', '${c.type}', '${escJs(c.icon || '')}')">編輯</button>
+                    <button class="btn btn-sm btn-outline-danger"
+                        onclick="openDeleteModal(${c.id}, '${escJs(c.name)}')">刪除</button>
                 </td>
             </tr>`).join('');
     }
@@ -174,14 +186,16 @@
         document.getElementById('editId').value = '';
         document.getElementById('inputName').value = '';
         document.getElementById('inputType').value = 'INCOME';
+        document.getElementById('inputIcon').value = '';
         categoryModal.show();
     }
 
-    function openEditModal(id, name, type) {
+    function openEditModal(id, name, type, icon) {
         document.getElementById('modalTitle').textContent = '編輯分類';
         document.getElementById('editId').value = id;
         document.getElementById('inputName').value = name;
         document.getElementById('inputType').value = type;
+        document.getElementById('inputIcon').value = icon || '';
         categoryModal.show();
     }
 
@@ -189,17 +203,21 @@
         const id   = document.getElementById('editId').value;
         const name = document.getElementById('inputName').value.trim();
         const type = document.getElementById('inputType').value;
+        const icon = document.getElementById('inputIcon').value.trim();
         if (!name) { alert('請輸入名稱'); return; }
 
         const url    = id ? `/api/categories/${id}` : '/api/categories';
         const method = id ? 'PUT' : 'POST';
+        const body = { name, type };
+        if (icon) body.icon = icon;
+
         const res = await apiFetch(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, type })
+            body: JSON.stringify(body)
         });
         if (!res) return;
-        if (res.ok) {
+        if (res.ok || res.status === 201) {
             categoryModal.hide();
             loadCategories(currentPage);
         } else {

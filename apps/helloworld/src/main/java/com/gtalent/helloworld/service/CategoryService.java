@@ -45,11 +45,14 @@ public class CategoryService {
                 .orElseThrow(() -> new IllegalArgumentException("找不到分類 id=" + id));
     }
 
-    public Category update(Long id, String name, String icon) {
+    public Category update(Long id, String name, String icon, TypeCategory type) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("找不到分類 id=" + id));
         category.setName(name);
         category.setIcon(icon);
+        if (type != null) {
+            category.setType(type);
+        }
         return categoryRepository.save(category);
     }
 

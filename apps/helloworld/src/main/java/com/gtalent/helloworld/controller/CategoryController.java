@@ -74,7 +74,7 @@ public class CategoryController {
     /** PUT /api/categories/{id} */
     @PutMapping("/{id}")
     public CategoryResp update(@PathVariable Long id, @RequestBody CategoryCreateReq req) {
-        Category updated = categoryService.update(id, req.getName(), req.getIcon());
+        Category updated = categoryService.update(id, req.getName(), req.getIcon(), req.getType());
         return CategoryResp.from(updated);
     }
 
