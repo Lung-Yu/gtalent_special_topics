@@ -85,9 +85,11 @@
                     <input type="date" class="form-control" id="inputDate">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">分類（可多選，以逗號分隔）</label>
-                    <input type="text" class="form-control" id="inputCategories" placeholder="e.g. 餐飲, 交通">
-                    <div class="form-text">請輸入已存在的分類名稱，多個請用逗號分隔</div>
+                    <label class="form-label">分類 <span class="text-danger">*</span></label>
+                    <select class="form-select" id="inputCategories" multiple size="5">
+                        <option disabled>載入中...</option>
+                    </select>
+                    <div class="form-text">按住 Ctrl（Mac 為 ⌘ Command）可多選；至少選擇一個</div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -202,25 +204,37 @@
         loadExpenditures(0);
     }
 
-    function openAddModal() {
+    async function loadCategoryOptions() {
+        const sel = document.getElementById('inputCategories');
+        sel.innerHTML = '<option disabled>載入中...</option>';
+        const res = await apiFetch('/api/categories?size=200&sort=name,asc');
+        if (!res) return;
+        const data = await res.json();
+        sel.innerHTML = (data.content || [])
+            .map(c => `<option value="${escHtml(c.name)}">${c.icon ? escHtml(c.icon) + ' ' : ''}${escHtml(c.name)} (${c.type === 'INCOME' ? '收入' : '支出'})</option>`)
+            .join('');
+    }
+
+    async function openAddModal() {
         document.getElementById('inputName').value = '';
         document.getElementById('inputMoney').value = '0';
         document.getElementById('inputPayway').value = 'LinePay';
         document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('inputCategories').value = '';
+        await loadCategoryOptions();
         addModal.show();
     }
 
     async function saveExpenditure() {
-        const name       = document.getElementById('inputName').value.trim();
-        const money      = parseInt(document.getElementById('inputMoney').value, 10);
-        const payway     = document.getElementById('inputPayway').value;
-        const date       = document.getElementById('inputDate').value;
-        const catInput   = document.getElementById('inputCategories').value;
-        const categoryNames = catInput ? catInput.split(',').map(s => s.trim()).filter(Boolean) : [];
+        const name    = document.getElementById('inputName').value.trim();
+        const money   = parseInt(document.getElementById('inputMoney').value, 10);
+        const payway  = document.getElementById('inputPayway').value;
+        const date    = document.getElementById('inputDate').value;
+        const sel     = document.getElementById('inputCategories');
+        const categoryNames = Array.from(sel.selectedOptions).map(o => o.value);
 
         if (!name) { alert('請輸入名稱'); return; }
         if (isNaN(money) || money < 0) { alert('請輸入有效金額'); return; }
+        if (categoryNames.length === 0) { alert('請至少選擇一個分類'); return; }
 
         const body = { name, money, payway, categoryNames };
         if (date) body.date = date;
