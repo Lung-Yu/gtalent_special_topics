@@ -55,7 +55,17 @@ public class JwtSecurityConfig {
                 // 其餘所有路徑需要有效 JWT
                 .anyRequest().authenticated()
             )
-
+            // ── 未認證的瀏覽器請求導向 /login ────────────────────
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    String accept = request.getHeader("Accept");
+                    if (accept != null && accept.contains("text/html")) {
+                        response.sendRedirect("/login");
+                    } else {
+                        response.sendError(401, "Unauthorized");
+                    }
+                })
+            )
             // ── 掛載 JWT Filter ────────────────────────────────────
             // 在 Spring Security 的帳密驗證 filter 之前執行，
             // 讓 SecurityContext 在後續 filter 中已有 Authentication 物件

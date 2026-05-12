@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -54,9 +57,10 @@ public class UserController_v2 {
         return userService.updateUser(user);
     }
 
+    /** GET v2/users?page=0&size=20 */
     @GetMapping
-    public List<User> getUsers() {
-        return userService.getUsers();
+    public Page<User> getUsers(@PageableDefault(size = 20) Pageable pageable) {
+        return userService.getUsers(pageable);
     }
 
     @GetMapping("/{id}")

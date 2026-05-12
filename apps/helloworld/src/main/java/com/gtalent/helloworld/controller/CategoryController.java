@@ -3,6 +3,9 @@ package com.gtalent.helloworld.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -40,18 +43,17 @@ public class CategoryController {
         this.userRepository = userRepository;
     }
 
-    /** GET /api/categories?type=INCOME */
+    /** GET /api/categories?type=INCOME&page=0&size=20 */
     @GetMapping
-    public List<CategoryResp> findAll(
-            @RequestParam(required = false) TypeCategory type) {
+    public Page<CategoryResp> findAll(
+            @RequestParam(required = false) TypeCategory type,
+            @PageableDefault(size = 20, sort = "name") Pageable pageable) {
 
-        List<Category> categories = (type != null)
-                ? categoryService.findByType(type)
-                : categoryService.findAll();
+        Page<Category> categories = (type != null)
+                ? categoryService.findByType(type, pageable)
+                : categoryService.findAll(pageable);
 
-        return categories.stream()
-                .map(CategoryResp::from)
-                .collect(Collectors.toList());
+        return categories.map(CategoryResp::from);
     }
 
     /** GET /api/categories/{id} */

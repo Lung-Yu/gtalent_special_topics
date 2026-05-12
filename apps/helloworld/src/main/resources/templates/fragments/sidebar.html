@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<body>
+<nav th:fragment="sidebar" class="d-flex flex-column flex-shrink-0 p-3 bg-dark text-white" style="width:220px; min-height:100vh;">
+    <a href="/hello" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <span class="fs-5 fw-semibold">💰 記帳系統</span>
+    </a>
+    <hr>
+    <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+            <a href="/pages/expenditures" class="nav-link text-white" id="nav-expenditures">
+                🧾 支出記錄
+            </a>
+        </li>
+        <li>
+            <a href="/pages/categories" class="nav-link text-white" id="nav-categories">
+                🏷️ 分類管理
+            </a>
+        </li>
+        <li>
+            <a href="/pages/statistics" class="nav-link text-white" id="nav-statistics">
+                📊 統計報表
+            </a>
+        </li>
+        <li>
+            <a href="/pages/inventory" class="nav-link text-white" id="nav-inventory">
+                📦 庫存管理
+            </a>
+        </li>
+    </ul>
+    <hr>
+    <div>
+        <a href="/logout" class="btn btn-outline-light btn-sm w-100">登出</a>
+    </div>
+</nav>
+<script th:fragment="sidebar-active">
+    // 依目前路徑標示 active
+    (function() {
+        const path = window.location.pathname;
+        const map = {
+            '/pages/expenditures': 'nav-expenditures',
+            '/pages/categories':   'nav-categories',
+            '/pages/statistics':   'nav-statistics',
+            '/pages/inventory':    'nav-inventory',
+        };
+        const id = map[path];
+        if (id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('active', 'bg-secondary');
+        }
+    })();
+</script>
+</body>
+</html>

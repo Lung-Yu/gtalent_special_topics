@@ -3,6 +3,9 @@ package com.gtalent.helloworld.controller;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,21 +44,20 @@ public class StatisticsController {
     }
 
     /**
-     * GET /api/statistics
-     * 查詢所有統計點。
+     * GET /api/statistics?page=0&size=20
      */
     @GetMapping
-    public List<StatisticsPoint> findAll() {
-        return statisticsService.findAll();
+    public Page<StatisticsPoint> findAll(@PageableDefault(size = 20) Pageable pageable) {
+        return statisticsService.findAll(pageable);
     }
 
     /**
-     * GET /api/statistics?date=2026-05-09
-     * 查詢指定日期的統計點。
+     * GET /api/statistics?date=2026-05-09&page=0&size=20
      */
     @GetMapping(params = "date")
-    public List<StatisticsPoint> findByDate(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return statisticsService.findByDate(date);
+    public Page<StatisticsPoint> findByDate(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @PageableDefault(size = 20) Pageable pageable) {
+        return statisticsService.findByDate(date, pageable);
     }
 }

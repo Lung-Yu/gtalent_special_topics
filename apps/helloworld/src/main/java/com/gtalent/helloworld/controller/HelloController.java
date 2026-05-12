@@ -2,6 +2,7 @@ package com.gtalent.helloworld.controller;
 
 import com.gtalent.helloworld.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +32,7 @@ public class HelloController {
     public String hello(Model model) {
         String userName = NAMES.get(RANDOM.nextInt(NAMES.size()));
         model.addAttribute("userName", userName);
-        model.addAttribute("allProducts", productService.getProducts());
+        model.addAttribute("allProducts", productService.getProducts(null, PageRequest.of(0, 20)).getContent());
         return "hello";
     }
 }

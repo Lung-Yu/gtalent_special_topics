@@ -1,7 +1,7 @@
 package com.gtalent.helloworld.service;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,8 +26,8 @@ public class InventoryService {
     }
 
     @Transactional(readOnly = true)
-    public List<Inventory> findAll() {
-        return inventoryRepository.findAll();
+    public Page<Inventory> findAll(Pageable pageable) {
+        return inventoryRepository.findAll(pageable);
     }
 
     @Transactional(readOnly = true)

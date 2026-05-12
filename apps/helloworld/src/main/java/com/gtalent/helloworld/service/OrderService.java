@@ -1,11 +1,10 @@
 package com.gtalent.helloworld.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.gtalent.helloworld.controller.req.OrderReq;
@@ -39,24 +38,19 @@ public class OrderService {
         return orderResp;
     }
 
-    public List<OrderResp> getOrders(String name, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-
-        List<OrderSummary> orders = new ArrayList<>();
-        
+    public Page<OrderResp> getOrders(String name, LocalDateTime startDateTime, LocalDateTime endDateTime, Pageable pageable) {
+        Page<OrderSummary> orders;
         if (name == null && startDateTime == null && endDateTime == null) {
-            orders = orderRepository.findAll();
+            orders = orderRepository.findAll(pageable);
         } else {
-            orders = orderRepository.findByStartDateTimeAndEndDateTime(name, startDateTime, endDateTime);
+            orders = orderRepository.findByStartDateTimeAndEndDateTime(name, startDateTime, endDateTime, pageable);
         }
-
-        List<OrderResp> orderResps = new ArrayList<>();
-        for (OrderSummary order : orders) {
+        return orders.map(order -> {
             OrderResp orderResp = new OrderResp();
             orderResp.setId(order.getId());
             orderResp.setName(order.getName());
-            orderResps.add(orderResp);
-        }
-        return orderResps;
+            return orderResp;
+        });
     }
 
     public OrderResp getOrderById(int id) {

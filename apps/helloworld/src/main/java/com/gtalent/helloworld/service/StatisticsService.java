@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,12 +67,12 @@ public class StatisticsService {
     }
 
     @Transactional(readOnly = true)
-    public List<StatisticsPoint> findAll() {
-        return statisticsPointRepository.findAll();
+    public Page<StatisticsPoint> findAll(Pageable pageable) {
+        return statisticsPointRepository.findAll(pageable);
     }
 
     @Transactional(readOnly = true)
-    public List<StatisticsPoint> findByDate(LocalDate date) {
-        return statisticsPointRepository.findByDate(date);
+    public Page<StatisticsPoint> findByDate(LocalDate date, Pageable pageable) {
+        return statisticsPointRepository.findByDate(date, pageable);
     }
 }

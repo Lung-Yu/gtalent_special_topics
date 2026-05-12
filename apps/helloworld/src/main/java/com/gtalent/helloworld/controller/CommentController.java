@@ -1,7 +1,8 @@
 package com.gtalent.helloworld.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -51,11 +52,12 @@ public class CommentController {
 
     // Read all by post
     @GetMapping
-    public List<Comment> findAll(@PathVariable Long postId) {
+    public Page<Comment> findAll(@PathVariable Long postId,
+            @PageableDefault(size = 20) Pageable pageable) {
         if (!postRepository.existsById(postId)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, POST_NOT_FOUND + postId);
         }
-        return commentRepository.findByPostId(postId);
+        return commentRepository.findByPostId(postId, pageable);
     }
 
     // Read one

@@ -1,8 +1,8 @@
 package com.gtalent.helloworld.service;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.gtalent.helloworld.repository.ProductRepository;
@@ -16,8 +16,12 @@ public class ProductService {
     private ProductRepository productRepository;
 
 
-    public List<Product> getProducts() {
-        return productRepository.findAll();
+    public Page<Product> getProducts(String name, Pageable pageable) {
+        if (name == null || name.isEmpty()) {
+            return productRepository.findAll(pageable);
+        } else {
+            return productRepository.findByNameContaining(name.trim(), pageable);
+        }
     }
 
 
@@ -28,18 +32,6 @@ public class ProductService {
 
     public Product getProductById(Long id) {
         return productRepository.findById(id).orElse(null);
-    }
-
-
-    public List<Product> getProducts(String name) {
-
-        if(name == null || name.isEmpty()) {
-            return getProducts();
-        }else {
-            name = name.trim();
-            return productRepository.findByNameContaining(name);
-        }
-        
     }
 
 

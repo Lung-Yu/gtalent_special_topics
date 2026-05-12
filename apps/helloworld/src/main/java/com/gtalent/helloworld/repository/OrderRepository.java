@@ -1,14 +1,13 @@
 package com.gtalent.helloworld.repository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.gtalent.helloworld.service.Order;
-
-import com.gtalent.helloworld.repository.OrderSummary;
 
 @Repository
 public class OrderRepository {
@@ -30,18 +29,17 @@ public class OrderRepository {
         return orderRepositoryImpl.save(order);
     }
 
-    public List<OrderSummary> findByStartDateTimeAndEndDateTime(
+    public Page<OrderSummary> findByStartDateTimeAndEndDateTime(
             String name,
             LocalDateTime startDateTime,
-            LocalDateTime endDateTime) {
+            LocalDateTime endDateTime,
+            Pageable pageable) {
 
-        return orderRepositoryImpl.findByNameBetweenStartDateAndEndDate(name, startDateTime, endDateTime);
+        return orderRepositoryImpl.findByNameBetweenStartDateAndEndDate(name, startDateTime, endDateTime, pageable);
     }
 
-    public List<OrderSummary> findAll() {
-
-        // return this.orders;
-        return orderRepositoryImpl.findAllIdAndName();
+    public Page<OrderSummary> findAll(Pageable pageable) {
+        return orderRepositoryImpl.findAllIdAndName(pageable);
     }
 
     public Order findById(int id) {

@@ -1,7 +1,8 @@
 package com.gtalent.helloworld.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,10 +31,10 @@ public class InventoryController {
         this.inventoryService = inventoryService;
     }
 
-    /** GET /api/inventory */
+    /** GET /api/inventory?page=0&size=20&sort=id,asc */
     @GetMapping
-    public List<Inventory> findAll() {
-        return inventoryService.findAll();
+    public Page<Inventory> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return inventoryService.findAll(pageable);
     }
 
     /** GET /api/inventory/{id} */

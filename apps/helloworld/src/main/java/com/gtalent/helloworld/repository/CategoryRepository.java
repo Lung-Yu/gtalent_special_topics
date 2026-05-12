@@ -3,12 +3,16 @@ package com.gtalent.helloworld.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.gtalent.helloworld.domain.model.Category;
 import com.gtalent.helloworld.domain.valueobject.TypeCategory;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
+
+    Page<Category> findByType(TypeCategory type, Pageable pageable);
 
     List<Category> findByType(TypeCategory type);
 

@@ -1,14 +1,13 @@
 package com.gtalent.helloworld.controller;
 
 import java.net.URI;
-import java.time.LocalDateTime;
 import java.time.LocalDate;
-import java.util.List;
-
-import org.springframework.web.bind.annotation.RequestParam;
-
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,6 +16,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -56,17 +57,16 @@ public class OrderController {
         return ResponseEntity.ok(updatedOrder);
     }
 
+    /** GET /orders?name=xxx&start=2026-01-01&end=2026-12-31&page=0&size=20 */
     @GetMapping("/orders")
-    public List<OrderResp> getOrders(@RequestParam(value = "name", required = false) String name,
-                                     @RequestParam(value = "start", required = false) LocalDate start,
-                                     @RequestParam(value = "end", required = false) LocalDate end) {
-        // Implementation for retrieving orders
-
-       LocalDateTime startDateTime = start != null ? start.atStartOfDay() : null;
-       LocalDateTime endDateTime = end != null ? end.atTime(23,59, 59) : null;
-
-        return orderService.getOrders(name,startDateTime, endDateTime);
-    
+    public Page<OrderResp> getOrders(
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "start", required = false) LocalDate start,
+            @RequestParam(value = "end", required = false) LocalDate end,
+            @PageableDefault(size = 20) Pageable pageable) {
+        LocalDateTime startDateTime = start != null ? start.atStartOfDay() : null;
+        LocalDateTime endDateTime = end != null ? end.atTime(23, 59, 59) : null;
+        return orderService.getOrders(name, startDateTime, endDateTime, pageable);
     }
 
     @GetMapping("/orders/{id}")

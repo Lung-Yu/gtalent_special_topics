@@ -51,6 +51,13 @@
 
     <h1>Hello, <span th:text="${userName}">User</span>!</h1>
 
+    <div style="margin-bottom:16px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="/pages/expenditures" style="padding:8px 16px; background:#3498db; color:white; border-radius:4px; text-decoration:none;">🧾 支出記錄</a>
+        <a href="/pages/categories"   style="padding:8px 16px; background:#27ae60; color:white; border-radius:4px; text-decoration:none;">🏷️ 分類管理</a>
+        <a href="/pages/statistics"   style="padding:8px 16px; background:#8e44ad; color:white; border-radius:4px; text-decoration:none;">📊 統計報表</a>
+        <a href="/pages/inventory"    style="padding:8px 16px; background:#e67e22; color:white; border-radius:4px; text-decoration:none;">📦 庫存管理</a>
+    </div>
+
     <table border="1">
         <thead>
             <tr>
