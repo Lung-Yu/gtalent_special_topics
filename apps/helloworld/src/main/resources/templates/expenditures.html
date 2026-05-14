@@ -171,7 +171,7 @@
                 <td class="text-end fw-semibold">$${(r.money || r.amount || 0).toLocaleString()}</td>
                 <td>${r.date || ''}</td>
                 <td><span class="badge bg-info text-dark">${escHtml(r.payway || r.paymentMethod || '')}</span></td>
-                <td>${(r.categories || []).map(c => `<span class="badge bg-secondary me-1">${escHtml(c.name || c)}</span>`).join('') || '<span class="text-muted">—</span>'}</td>
+                <td>${(r.categoryNames || []).map(c => `<span class="badge bg-secondary me-1">${escHtml(c)}</span>`).join('') || '<span class="text-muted">—</span>'}</td>
                 <td>
                     <button class="btn btn-sm btn-outline-danger" onclick="openDeleteModal(${r.id}, '${escJs(r.name || r.itemName || '')}')">刪除</button>
                 </td>
