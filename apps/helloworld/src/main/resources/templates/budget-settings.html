@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>預算提醒設定</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+<div class="d-flex">
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <!-- Main content -->
+    <main class="flex-grow-1 p-4">
+        <h4 class="mb-4">💸 預算提醒設定</h4>
+
+        <div class="card shadow-sm" style="max-width:480px">
+            <div class="card-body">
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">每日消費上限（NTD）<span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" class="form-control" id="threshold" min="0" placeholder="例如 3000">
+                    </div>
+                    <div class="form-text">超過此金額時將在提醒時間顯示通知</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">每日提醒時間</label>
+                    <input type="time" class="form-control" id="alertTime">
+                    <div class="form-text">CronTrigger 將在此時間觸發一次檢查</div>
+                </div>
+
+                <div class="mb-4 d-flex align-items-center gap-3">
+                    <label class="form-label fw-semibold mb-0">啟用提醒</label>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" id="enabled" role="switch">
+                    </div>
+                </div>
+
+                <div id="saveResult" class="mb-3"></div>
+
+                <button class="btn btn-primary" onclick="saveSetting()">儲存設定</button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:replace="~{fragments/sidebar :: sidebar-active}"></script>
+<script>
+    async function apiFetch(url, options = {}) {
+        const res = await fetch(url, { credentials: 'include', ...options });
+        if (res.status === 401) { location.href = '/login'; return null; }
+        return res;
+    }
+
+    async function loadSetting() {
+        const res = await apiFetch('/api/budget-settings');
+        if (!res) return;
+        const data = await res.json();
+        document.getElementById('threshold').value = data.threshold ?? 3000;
+        const h = String(data.alertHour ?? 21).padStart(2, '0');
+        const m = String(data.alertMinute ?? 0).padStart(2, '0');
+        document.getElementById('alertTime').value = `${h}:${m}`;
+        document.getElementById('enabled').checked = data.enabled ?? false;
+    }
+
+    async function saveSetting() {
+        const threshold = parseInt(document.getElementById('threshold').value, 10);
+        const timeParts = document.getElementById('alertTime').value.split(':');
+        const alertHour   = parseInt(timeParts[0], 10);
+        const alertMinute = parseInt(timeParts[1], 10);
+        const enabled = document.getElementById('enabled').checked;
+
+        if (isNaN(threshold) || threshold < 0) { alert('請輸入有效的消費上限'); return; }
+        if (!document.getElementById('alertTime').value) { alert('請選擇提醒時間'); return; }
+
+        const res = await apiFetch('/api/budget-settings', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ threshold, alertHour, alertMinute, enabled })
+        });
+        if (!res) return;
+
+        const resultDiv = document.getElementById('saveResult');
+        if (res.ok) {
+            resultDiv.innerHTML = '<div class="alert alert-success mb-0">✅ 設定已儲存，CronTrigger 已更新。</div>';
+        } else {
+            const err = await res.json().catch(() => ({}));
+            resultDiv.innerHTML = `<div class="alert alert-danger mb-0">❌ 儲存失敗：${escHtml(err.message || '未知錯誤')}</div>`;
+        }
+    }
+
+    function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    loadSetting();
+</script>
+</body>
+</html>

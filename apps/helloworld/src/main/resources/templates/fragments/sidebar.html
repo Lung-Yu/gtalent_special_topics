@@ -27,10 +27,25 @@
                 📦 庫存管理
             </a>
         </li>
+        <li>
+            <a href="/pages/budget-settings" class="nav-link text-white" id="nav-budget-settings">
+                💸 預算提醒
+            </a>
+        </li>
     </ul>
     <hr>
     <div>
         <a href="/logout" class="btn btn-outline-light btn-sm w-100">登出</a>
+    </div>
+
+    <!-- 預算超支 Toast（position:fixed，不影響 sidebar 排版） -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:9999">
+        <div id="budgetAlertToast" class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold" id="budgetAlertMsg">⚠️ 今日消費已超過預算！</div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
     </div>
 </nav>
 <script th:fragment="sidebar-active">
@@ -38,16 +53,34 @@
     (function() {
         const path = window.location.pathname;
         const map = {
-            '/pages/expenditures': 'nav-expenditures',
-            '/pages/categories':   'nav-categories',
-            '/pages/statistics':   'nav-statistics',
-            '/pages/inventory':    'nav-inventory',
+            '/pages/expenditures':    'nav-expenditures',
+            '/pages/categories':      'nav-categories',
+            '/pages/statistics':      'nav-statistics',
+            '/pages/inventory':       'nav-inventory',
+            '/pages/budget-settings': 'nav-budget-settings',
         };
         const id = map[path];
         if (id) {
             const el = document.getElementById(id);
             if (el) el.classList.add('active', 'bg-secondary');
         }
+    })();
+
+    // 預算超支站內提醒：頁面載入時檢查今日是否有 SENT alert
+    (async function checkBudgetAlert() {
+        try {
+            const res = await fetch('/api/budget-alerts/today', { credentials: 'include' });
+            if (res.status === 200) {
+                const data = await res.json();
+                const msg = `⚠️ 今日消費 $${(data.totalSpent || 0).toLocaleString()} 已超過每日預算！`;
+                const msgEl = document.getElementById('budgetAlertMsg');
+                const toastEl = document.getElementById('budgetAlertToast');
+                if (msgEl) msgEl.textContent = msg;
+                if (toastEl && typeof bootstrap !== 'undefined') {
+                    new bootstrap.Toast(toastEl, { delay: 8000 }).show();
+                }
+            }
+        } catch (e) { /* 靜默失敗，不影響頁面功能 */ }
     })();
 </script>
 </body>

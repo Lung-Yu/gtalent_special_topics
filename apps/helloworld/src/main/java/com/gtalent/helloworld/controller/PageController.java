@@ -31,4 +31,9 @@ public class PageController {
     public String inventory() {
         return "inventory";
     }
+
+    @GetMapping("/budget-settings")
+    public String budgetSettings() {
+        return "budget-settings";
+    }
 }
