@@ -24,7 +24,7 @@
                         <label class="form-label">統計類型</label>
                         <select class="form-select" id="calcType">
                             <option value="USER">USER（依使用者）</option>
-                            <option value="CATEGORY">CATEGORY（依分類）</option>
+                            <option value="MANAGER">MANAGER（依分類聚合）</option>
                         </select>
                     </div>
                     <div class="col-auto">
@@ -106,9 +106,9 @@
             <tr>
                 <td>${data.number * data.size + i + 1}</td>
                 <td>${s.date || ''}</td>
-                <td><span class="badge bg-primary">${escHtml(s.type || '')}</span></td>
-                <td class="text-end fw-semibold">$${(s.amount || s.total || s.value || 0).toLocaleString()}</td>
-                <td>${escHtml(s.description || s.label || s.name || '—')}</td>
+                <td><span class="badge bg-primary">${s.userId == null ? 'MANAGER' : 'USER'}</span></td>
+                <td class="text-end fw-semibold">$${(s.amount || 0).toLocaleString()}</td>
+                <td>${escHtml(s.categoryName || '—')}</td>
             </tr>`).join('');
     }
 

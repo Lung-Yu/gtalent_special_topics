@@ -1,8 +1,11 @@
 package com.gtalent.helloworld.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -50,8 +53,27 @@ public class StatisticsService {
             throw new IllegalArgumentException("不支援的統計類型: " + type
                     + "，可用類型：" + strategyMap.keySet());
         }
-        List<StatisticsPoint> points = strategy.calculate(date);
-        return statisticsPointRepository.saveAll(points);
+        List<StatisticsPoint> newPoints = strategy.calculate(date);
+
+        // upsert：以 (userId, categoryName, date) 為唯一鍵，避免重複觸發產生重複資料
+        Map<String, StatisticsPoint> existingMap = statisticsPointRepository.findByDate(date).stream()
+                .collect(Collectors.toMap(
+                        p -> Objects.toString(p.getUserId(), "null") + "_" + p.getCategoryName(),
+                        Function.identity()));
+
+        List<StatisticsPoint> toSave = new ArrayList<>();
+        for (StatisticsPoint np : newPoints) {
+            String key = Objects.toString(np.getUserId(), "null") + "_" + np.getCategoryName();
+            StatisticsPoint existing = existingMap.get(key);
+            if (existing != null) {
+                existing.setAmount(np.getAmount());
+                existing.setCalculatedAt(LocalDateTime.now());
+                toSave.add(existing);
+            } else {
+                toSave.add(np);
+            }
+        }
+        return statisticsPointRepository.saveAll(toSave);
     }
 
     /**

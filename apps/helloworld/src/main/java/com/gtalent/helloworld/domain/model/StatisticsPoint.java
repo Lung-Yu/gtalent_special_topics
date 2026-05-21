@@ -62,6 +62,7 @@ public class StatisticsPoint {
     public String getCategoryName() { return categoryName; }
 
     public LocalDateTime getCalculatedAt() { return calculatedAt; }
+    public void setCalculatedAt(LocalDateTime calculatedAt) { this.calculatedAt = calculatedAt; }
 
     public LocalDate getDate() { return date; }
 }
