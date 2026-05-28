@@ -1,16 +1,18 @@
 package com.gtalent.helloworld.service;
 
-import org.springframework.web.multipart.MultipartFile;
+import com.gtalent.helloworld.domain.model.FileMetadata;
 import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface StorageService {
 
     void init();
 
-    void store(MultipartFile file);
+    FileMetadata store(MultipartFile file);
 
     Resource loadAsResource(String filename);
 
     void deleteAll();
 
+    void deleteFile(Long metadataId);
 }
