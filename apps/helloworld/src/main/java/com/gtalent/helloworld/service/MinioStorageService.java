@@ -174,29 +174,42 @@ public class MinioStorageService implements StorageService {
         return uploadSessionRepository.save(session);
     }
 
+    private static final int BUFFER_SIZE = 256 * 1024;
+
     @Override
     @Transactional
     public void storeChunk(String uploadId, long offset, InputStream chunkStream) {
-        UploadSession session = loadPendingSession(uploadId);
-        if (offset < 0 || offset >= session.getTotalSize()) {
+        UploadSession session = loadActiveSession(uploadId);
+        long totalSize = session.getTotalSize();
+        if (offset < 0 || offset >= totalSize) {
             throw new StorageException("Offset out of bounds: " + offset);
         }
+        if (session.getReceivedBytes() >= totalSize) {
+            throw new StorageException("Upload already complete; no more chunks accepted: " + uploadId);
+        }
 
+        long maxChunkBytes = totalSize - offset;  // prevent writing beyond declared size
         Path stagingFile = stagingPath(uploadId);
         try (RandomAccessFile raf = new RandomAccessFile(stagingFile.toFile(), "rw")) {
             raf.seek(offset);
-            byte[] buf = new byte[256 * 1024];
+            byte[] buf = new byte[BUFFER_SIZE];
             int bytesRead;
             long written = 0;
             while ((bytesRead = chunkStream.read(buf)) != -1) {
+                if (written + bytesRead > maxChunkBytes) {
+                    throw new StorageException(
+                            "Chunk exceeds remaining file size at offset " + offset);
+                }
                 raf.write(buf, 0, bytesRead);
                 written += bytesRead;
             }
-            long newHighWater = Math.min(session.getTotalSize(), offset + written);
-            if (newHighWater > session.getReceivedBytes()) {
-                session.setReceivedBytes(newHighWater);
-                uploadSessionRepository.save(session);
+            // Cumulative sum (not high-watermark) to detect sparse-file spoofing
+            session.setReceivedBytes(session.getReceivedBytes() + written);
+            // Transition PENDING → IN_PROGRESS on first successful chunk
+            if (session.getStatus() == UploadStatus.PENDING) {
+                session.setStatus(UploadStatus.IN_PROGRESS);
             }
+            uploadSessionRepository.save(session);
         } catch (IOException e) {
             throw new StorageException("Failed to write chunk at offset " + offset, e);
         }
@@ -205,10 +218,16 @@ public class MinioStorageService implements StorageService {
     @Override
     @Transactional
     public FileMetadata completeUpload(String uploadId) {
-        UploadSession session = loadPendingSession(uploadId);
+        UploadSession session = loadInProgressSession(uploadId);
         Path stagingFile = stagingPath(uploadId);
 
         try {
+            // Validate cumulative receivedBytes BEFORE touching the filesystem
+            if (session.getReceivedBytes() != session.getTotalSize()) {
+                throw new StorageException(
+                        "Upload incomplete: received " + session.getReceivedBytes()
+                        + " of " + session.getTotalSize() + " bytes");
+            }
             long actualSize = Files.size(stagingFile);
             if (actualSize != session.getTotalSize()) {
                 throw new StorageException(
@@ -351,11 +370,21 @@ public class MinioStorageService implements StorageService {
         return fileMetadataRepository.save(meta);
     }
 
-    private UploadSession loadPendingSession(String uploadId) {
+    /** Accepts PENDING or IN_PROGRESS — used by storeChunk. */
+    private UploadSession loadActiveSession(String uploadId) {
         return uploadSessionRepository.findByUploadId(uploadId)
-                .filter(s -> s.getStatus() == UploadStatus.PENDING)
+                .filter(s -> s.getStatus() == UploadStatus.PENDING
+                          || s.getStatus() == UploadStatus.IN_PROGRESS)
                 .orElseThrow(() -> new StorageFileNotFoundException(
-                        "Upload session not found or not PENDING: " + uploadId));
+                        "Upload session not found or not active: " + uploadId));
+    }
+
+    /** Requires IN_PROGRESS — used by completeUpload (guards zero-chunk complete). */
+    private UploadSession loadInProgressSession(String uploadId) {
+        return uploadSessionRepository.findByUploadId(uploadId)
+                .filter(s -> s.getStatus() == UploadStatus.IN_PROGRESS)
+                .orElseThrow(() -> new StorageFileNotFoundException(
+                        "Upload session not found or not IN_PROGRESS: " + uploadId));
     }
 
     private Path stagingPath(String uploadId) {
