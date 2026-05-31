@@ -390,5 +390,21 @@ public class FileSystemStorageService implements StorageService {
         }
         return sb.toString();
     }
+
+    // ── Phase 3: pre-signed URL upload (not supported) ───────────────
+
+    @Override
+    public PresignedUploadResult generatePresignedUpload(String originalName, String contentType, long fileSize) {
+        throw new StorageException(
+                "Presigned URL upload is not supported by the filesystem storage provider. " +
+                "Set storage.provider=minio to enable this feature.");
+    }
+
+    @Override
+    public FileMetadata confirmPresignedUpload(String uploadToken) {
+        throw new StorageException(
+                "Presigned URL upload is not supported by the filesystem storage provider. " +
+                "Set storage.provider=minio to enable this feature.");
+    }
 }
 

@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.gtalent.helloworld.domain.model.FileMetadata;
 import com.gtalent.helloworld.domain.model.UploadSession;
+import com.gtalent.helloworld.service.PresignedUploadResult;
 import com.gtalent.helloworld.service.StorageService;
 
 @RestController
@@ -91,7 +92,48 @@ public class UploadController {
         return ResponseEntity.ok(metadata);
     }
 
-    // ── Inner DTO ─────────────────────────────────────────────────────
+    // ── Phase 3: pre-signed URL upload ─────────────────────────────────
+
+    /**
+     * Step 1 – Request a pre-signed upload URL.
+     *
+     * <p>The server creates an {@link com.gtalent.helloworld.domain.model.UploadSession}
+     * and returns a time-limited PUT URL pointing directly at MinIO.
+     * The client uploads file bytes directly to that URL (without going through this server),
+     * then calls the confirm endpoint.
+     *
+     * Request body (JSON):
+     * <pre>
+     * {
+     *   "originalName": "video.mp4",
+     *   "contentType": "video/mp4",
+     *   "fileSize": 107374182400
+     * }
+     * </pre>
+     */
+    @PostMapping("/upload/presign")
+    public ResponseEntity<PresignedUploadResponse> generatePresignedUpload(
+            @Valid @RequestBody PresignedUploadRequest req) {
+        PresignedUploadResult result = storageService.generatePresignedUpload(
+                req.getOriginalName(), req.getContentType(), req.getFileSize());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new PresignedUploadResponse(
+                        result.uploadToken(), result.presignedUrl(), result.expiresAt()));
+    }
+
+    /**
+     * Step 2 – Confirm the upload and persist metadata.
+     *
+     * <p>Call this after you have PUT the file bytes to the pre-signed URL.
+     * The server verifies the object size, computes SHA-256, performs deduplication,
+     * and returns the resulting {@link FileMetadata}.
+     */
+    @PostMapping("/upload/presign/{token}/confirm")
+    public ResponseEntity<FileMetadata> confirmPresignedUpload(@PathVariable String token) {
+        return ResponseEntity.ok(storageService.confirmPresignedUpload(token));
+    }
+
+    // ── Inner DTOs ─────────────────────────────────────────────────────
 
     public static class InitUploadRequest {
 
@@ -112,5 +154,27 @@ public class UploadController {
         public long getTotalSize() { return totalSize; }
         public void setTotalSize(long totalSize) { this.totalSize = totalSize; }
     }
+
+    public static class PresignedUploadRequest {
+
+        @NotBlank
+        private String originalName;
+
+        private String contentType;
+
+        @Positive
+        private long fileSize;
+
+        public String getOriginalName() { return originalName; }
+        public void setOriginalName(String v) { this.originalName = v; }
+
+        public String getContentType() { return contentType; }
+        public void setContentType(String v) { this.contentType = v; }
+
+        public long getFileSize() { return fileSize; }
+        public void setFileSize(long v) { this.fileSize = v; }
+    }
+
+    public record PresignedUploadResponse(String uploadToken, String presignedUrl, String expiresAt) {}
 }
 

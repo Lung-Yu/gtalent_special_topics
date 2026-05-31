@@ -15,7 +15,11 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.RemoveObjectsArgs;
+import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.Result;
+import io.minio.StatObjectArgs;
+import io.minio.StatObjectResponse;
+import io.minio.http.Method;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
@@ -43,6 +47,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * MinIO-backed implementation of {@link StorageService}.
@@ -66,6 +71,7 @@ public class MinioStorageService implements StorageService {
     private static final long PART_SIZE = 10 * 1024 * 1024L;
 
     private final MinioClient minioClient;
+    private final int presignExpiryMinutes;
     private final MinioProperties minioProperties;
     private final StoredFileRepository storedFileRepository;
     private final FileMetadataRepository fileMetadataRepository;
@@ -80,13 +86,15 @@ public class MinioStorageService implements StorageService {
                                 StoredFileRepository storedFileRepository,
                                 FileMetadataRepository fileMetadataRepository,
                                 UploadSessionRepository uploadSessionRepository,
-                                @Value("${storage.upload-session-expire-hours:24}") int uploadSessionExpireHours) {
+                                @Value("${storage.upload-session-expire-hours:24}") int uploadSessionExpireHours,
+                                @Value("${storage.presign-expiry-minutes:15}") int presignExpiryMinutes) {
         this.minioClient = minioClient;
         this.minioProperties = minioProperties;
         this.storedFileRepository = storedFileRepository;
         this.fileMetadataRepository = fileMetadataRepository;
         this.uploadSessionRepository = uploadSessionRepository;
         this.uploadSessionExpireHours = uploadSessionExpireHours;
+        this.presignExpiryMinutes = presignExpiryMinutes;
         this.stagingRoot = Paths.get(storageProperties.getLocation()).resolve("staging");
     }
 
@@ -267,6 +275,110 @@ public class MinioStorageService implements StorageService {
             session.setStatus(UploadStatus.FAILED);
             uploadSessionRepository.save(session);
             throw new StorageException("Failed to complete upload " + uploadId, e);
+        }
+    }
+
+    // ── Phase 3: pre-signed URL upload ───────────────────────────────
+
+    @Override
+    @Transactional
+    public PresignedUploadResult generatePresignedUpload(String originalName, String contentType, long fileSize) {
+        String uploadId = UUID.randomUUID().toString();
+        String ext = extractExtension(originalName);
+        String objectKey = uploadId + (ext.isEmpty() ? "" : "." + ext);
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(presignExpiryMinutes);
+
+        String presignedUrl;
+        try {
+            presignedUrl = minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.PUT)
+                            .bucket(minioProperties.getBucketName())
+                            .object(objectKey)
+                            .expiry(presignExpiryMinutes, TimeUnit.MINUTES)
+                            .build());
+        } catch (Exception e) {
+            throw new StorageException("Failed to generate presigned URL", e);
+        }
+
+        UploadSession session = new UploadSession();
+        session.setUploadId(uploadId);
+        session.setOriginalName(originalName);
+        session.setContentType(contentType != null ? contentType : "application/octet-stream");
+        session.setTotalSize(fileSize);
+        session.setReceivedBytes(0L);
+        session.setStatus(UploadStatus.PENDING);
+        session.setExpiredAt(expiresAt);
+        // Reuse minioUploadId field to carry the UUID-based object key
+        session.setMinioUploadId(objectKey);
+        uploadSessionRepository.save(session);
+
+        return new PresignedUploadResult(uploadId, presignedUrl, expiresAt.toString());
+    }
+
+    @Override
+    @Transactional
+    public FileMetadata confirmPresignedUpload(String uploadToken) {
+        UploadSession session = uploadSessionRepository.findByUploadId(uploadToken)
+                .filter(s -> s.getStatus() == UploadStatus.PENDING)
+                .orElseThrow(() -> new StorageFileNotFoundException(
+                        "Upload session not found or not PENDING: " + uploadToken));
+
+        String objectKey = session.getMinioUploadId();
+        String bucket = minioProperties.getBucketName();
+
+        try {
+            // 1. Verify the object exists in MinIO and its size matches the declared totalSize
+            StatObjectResponse stats;
+            try {
+                stats = minioClient.statObject(
+                        StatObjectArgs.builder().bucket(bucket).object(objectKey).build());
+            } catch (Exception e) {
+                throw new StorageException(
+                        "Object not found in MinIO – upload the file to the presigned URL first: "
+                        + uploadToken, e);
+            }
+            if (stats.size() != session.getTotalSize()) {
+                throw new StorageException("Object size mismatch: expected "
+                        + session.getTotalSize() + " bytes, got " + stats.size());
+            }
+
+            // 2. Stream from MinIO to compute SHA-256 for deduplication
+            String hash;
+            try (InputStream is = minioClient.getObject(
+                    GetObjectArgs.builder().bucket(bucket).object(objectKey).build())) {
+                hash = computeHash(is);
+            }
+
+            // 3. Dedup: if hash already in DB, delete the newly uploaded duplicate and reuse
+            StoredFile storedFile = storedFileRepository.findByHash(hash)
+                    .map(existing -> {
+                        try {
+                            minioClient.removeObject(RemoveObjectArgs.builder()
+                                    .bucket(bucket).object(objectKey).build());
+                        } catch (Exception ex) {
+                            throw new StorageException(
+                                    "Failed to remove duplicate object: " + objectKey, ex);
+                        }
+                        return existing;
+                    })
+                    .orElseGet(() -> persistStoredFile(hash, objectKey));
+
+            // 4. Persist metadata and complete the session
+            FileMetadata meta = saveMetadata(storedFile,
+                    session.getOriginalName(), session.getContentType(), session.getTotalSize());
+            session.setStatus(UploadStatus.COMPLETED);
+            uploadSessionRepository.save(session);
+            return meta;
+
+        } catch (StorageException se) {
+            session.setStatus(UploadStatus.FAILED);
+            uploadSessionRepository.save(session);
+            throw se;
+        } catch (Exception e) {
+            session.setStatus(UploadStatus.FAILED);
+            uploadSessionRepository.save(session);
+            throw new StorageException("Failed to confirm presigned upload: " + uploadToken, e);
         }
     }
 

@@ -45,4 +45,28 @@ public interface StorageService {
     void deleteAll();
 
     void deleteFile(Long metadataId);
+
+    // ── Phase 3: pre-signed URL upload (MinIO only) ───────────────────
+
+    /**
+     * Generates a time-limited pre-signed PUT URL so the client can upload a file
+     * directly to object storage without routing bytes through this server.
+     *
+     * <p>The returned {@code uploadToken} must be passed to {@link #confirmPresignedUpload}
+     * after the client has PUT the file bytes to the presigned URL.
+     *
+     * <p><b>Not supported</b> by the filesystem storage provider — throws
+     * {@link StorageException} when {@code storage.provider=filesystem}.
+     */
+    PresignedUploadResult generatePresignedUpload(String originalName, String contentType, long fileSize);
+
+    /**
+     * Verifies that the object was uploaded to the presigned URL, streams it to compute
+     * SHA-256, performs deduplication, persists {@link com.gtalent.helloworld.domain.model.FileMetadata},
+     * and marks the upload session as COMPLETED.
+     *
+     * <p><b>Not supported</b> by the filesystem storage provider — throws
+     * {@link StorageException} when {@code storage.provider=filesystem}.
+     */
+    FileMetadata confirmPresignedUpload(String uploadToken);
 }
