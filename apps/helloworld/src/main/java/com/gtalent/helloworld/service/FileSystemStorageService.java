@@ -4,12 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.net.MalformedURLException;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -21,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
@@ -37,18 +36,23 @@ import com.gtalent.helloworld.repository.UploadSessionRepository;
 @Service
 public class FileSystemStorageService implements StorageService {
 
+    /** Shared I/O buffer size for chunk writes and SHA-256 hashing (256 KB). */
+    private static final int BUFFER_SIZE = 256 * 1024;
+
     private final Path rootLocation;
     private final StoredFileRepository storedFileRepository;
     private final FileMetadataRepository fileMetadataRepository;
     private final UploadSessionRepository uploadSessionRepository;
     private final Semaphore uploadSemaphore;
     private final int uploadSessionExpireHours;
+    private final UploadIdAllocator uploadIdAllocator;
 
     @Autowired
     public FileSystemStorageService(StorageProperties properties,
                                     StoredFileRepository storedFileRepository,
                                     FileMetadataRepository fileMetadataRepository,
                                     UploadSessionRepository uploadSessionRepository,
+                                    UploadIdAllocator uploadIdAllocator,
                                     @Value("${storage.max-concurrent-uploads:3}") int maxConcurrentUploads,
                                     @Value("${storage.upload-session-expire-hours:24}") int uploadSessionExpireHours) {
         if (properties.getLocation().trim().isEmpty()) {
@@ -58,6 +62,7 @@ public class FileSystemStorageService implements StorageService {
         this.storedFileRepository = storedFileRepository;
         this.fileMetadataRepository = fileMetadataRepository;
         this.uploadSessionRepository = uploadSessionRepository;
+        this.uploadIdAllocator = uploadIdAllocator;
         this.uploadSemaphore = new Semaphore(maxConcurrentUploads);
         this.uploadSessionExpireHours = uploadSessionExpireHours;
     }
@@ -125,13 +130,13 @@ public class FileSystemStorageService implements StorageService {
     public UploadSession initUpload(String originalName, String contentType, long totalSize) {
         checkDiskSpace(totalSize);
 
-        String uploadId = UUID.randomUUID().toString();
-        Path stagingFile = stagingPath(uploadId);
-        try (FileChannel fc = FileChannel.open(stagingFile,
-                StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
-            // Create empty file; OS will allocate space lazily (sparse file).
+        // UploadIdAllocator (獨立 bean) 負責以 CREATE_NEW 原子建立 staging 佔位檔並 retry。
+        // 參見 UploadIdAllocator Javadoc 了解雙重防線設計。
+        String uploadId;
+        try {
+            uploadId = uploadIdAllocator.allocate(rootLocation.resolve("tmp"));
         } catch (IOException e) {
-            throw new StorageException("Could not create staging file for upload " + uploadId, e);
+            throw new StorageException("Could not allocate upload ID", e);
         }
 
         UploadSession session = new UploadSession();
@@ -142,7 +147,14 @@ public class FileSystemStorageService implements StorageService {
         session.setReceivedBytes(0L);
         session.setStatus(UploadStatus.PENDING);
         session.setExpiredAt(LocalDateTime.now().plusHours(uploadSessionExpireHours));
-        return uploadSessionRepository.save(session);
+        try {
+            return uploadSessionRepository.save(session);
+        } catch (DataIntegrityViolationException e) {
+            // 第二道防線：DB UNIQUE constraint 衝突（極罕見）
+            // 清理已建立的 staging 佔位檔，避免 filesystem 洩漏
+            try { Files.deleteIfExists(stagingPath(uploadId)); } catch (IOException ignored) { /* best-effort */ }
+            throw new StorageException("Upload ID collision detected in DB for " + uploadId, e);
+        }
     }
 
     @Override
@@ -151,29 +163,57 @@ public class FileSystemStorageService implements StorageService {
         UploadSession session = uploadSessionRepository.findByUploadId(uploadId)
                 .orElseThrow(() -> new StorageFileNotFoundException(
                         "Upload session not found: " + uploadId));
-        if (session.getStatus() != UploadStatus.PENDING) {
-            throw new StorageException("Session is not PENDING: " + uploadId);
+
+        // 接受 PENDING（第一個 chunk）或 IN_PROGRESS（後續 chunk）
+        UploadStatus currentStatus = session.getStatus();
+        if (currentStatus != UploadStatus.PENDING && currentStatus != UploadStatus.IN_PROGRESS) {
+            throw new StorageException(
+                    "Session is not accepting chunks (status=" + currentStatus + "): " + uploadId);
         }
+
+        // offset 起點越界（含等於 totalSize 的情況）
         if (offset < 0 || offset >= session.getTotalSize()) {
             throw new StorageException("Offset out of bounds: " + offset);
         }
 
+        // 已累積滿額，不再接受任何資料
+        if (session.getReceivedBytes() >= session.getTotalSize()) {
+            throw new StorageException(
+                    "Upload already at capacity; no further chunks accepted for: " + uploadId);
+        }
+
+        // 此 chunk 從 offset 開始最多可寫入的 bytes 數
+        long maxChunkBytes = session.getTotalSize() - offset;
+
         Path stagingFile = stagingPath(uploadId);
         try (RandomAccessFile raf = new RandomAccessFile(stagingFile.toFile(), "rw")) {
             raf.seek(offset);
-            byte[] buffer = new byte[256 * 1024]; // 256 KB write buffer
+            byte[] buffer = new byte[BUFFER_SIZE];
             int bytesRead;
             long written = 0L;
             while ((bytesRead = chunkStream.read(buffer)) != -1) {
+                // chunk 末端越界防護：拒絕寫入超出宣告大小的資料
+                if (written + bytesRead > maxChunkBytes) {
+                    throw new StorageException(
+                            "Chunk extends beyond declared file size at offset " + offset);
+                }
                 raf.write(buffer, 0, bytesRead);
                 written += bytesRead;
             }
-            // Track sequential progress (upper-watermark of written range)
-            long newHighWater = Math.min(session.getTotalSize(), offset + written);
-            if (newHighWater > session.getReceivedBytes()) {
-                session.setReceivedBytes(newHighWater);
-                uploadSessionRepository.save(session);
+
+            // 累積式計算：記錄本次實際寫入的 bytes，防止 sparse file 偽造進度
+            long newReceived = session.getReceivedBytes() + written;
+            if (newReceived > session.getTotalSize()) {
+                throw new StorageException(
+                        "Total received bytes exceed declared total size for: " + uploadId);
             }
+            session.setReceivedBytes(newReceived);
+
+            // 第一個 chunk 成功後將狀態從 PENDING 推進至 IN_PROGRESS
+            if (currentStatus == UploadStatus.PENDING) {
+                session.setStatus(UploadStatus.IN_PROGRESS);
+            }
+            uploadSessionRepository.save(session);
         } catch (IOException e) {
             throw new StorageException("Failed to write chunk at offset " + offset, e);
         }
@@ -185,8 +225,19 @@ public class FileSystemStorageService implements StorageService {
         UploadSession session = uploadSessionRepository.findByUploadId(uploadId)
                 .orElseThrow(() -> new StorageFileNotFoundException(
                         "Upload session not found: " + uploadId));
-        if (session.getStatus() != UploadStatus.PENDING) {
-            throw new StorageException("Session is not PENDING: " + uploadId);
+
+        // 只有已收到至少一個 chunk 的 session 才允許 complete
+        if (session.getStatus() != UploadStatus.IN_PROGRESS) {
+            throw new StorageException(
+                    "Session must be IN_PROGRESS to complete (status="
+                    + session.getStatus() + "): " + uploadId);
+        }
+
+        // 累積 receivedBytes 必須與宣告大小完全一致，防止部分上傳即呼叫 complete
+        if (!session.getReceivedBytes().equals(session.getTotalSize())) {
+            throw new StorageException(
+                    "Incomplete upload: received " + session.getReceivedBytes()
+                    + " of " + session.getTotalSize() + " bytes for: " + uploadId);
         }
 
         Path stagingFile = stagingPath(uploadId);
@@ -289,7 +340,7 @@ public class FileSystemStorageService implements StorageService {
      */
     private String hashFile(Path filePath) throws IOException {
         MessageDigest digest = newSha256();
-        byte[] buffer = new byte[256 * 1024];
+        byte[] buffer = new byte[BUFFER_SIZE];
         try (InputStream is = Files.newInputStream(filePath);
              DigestInputStream dis = new DigestInputStream(is, digest)) {
             //noinspection StatementWithEmptyBody
