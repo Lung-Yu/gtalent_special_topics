@@ -46,6 +46,21 @@ public class UploadSession {
     @Column(nullable = false)
     private LocalDateTime expiredAt;
 
+    /**
+     * MinIO multipart upload ID returned by createMultipartUpload().
+     * Null when using filesystem storage or before multipart is initiated.
+     */
+    @Column(length = 512)
+    private String minioUploadId;
+
+    /**
+     * JSON array of completed part ETags: [{"part":1,"etag":"xxx"}, ...].
+     * Accumulated during storeChunk() calls, consumed by completeUpload().
+     * Stored as TEXT to accommodate large numbers of parts.
+     */
+    @Column(columnDefinition = "TEXT")
+    private String partEtags;
+
     // ── getters / setters ────────────────────────────────────────
 
     public Long getId() { return id; }
@@ -72,4 +87,10 @@ public class UploadSession {
 
     public LocalDateTime getExpiredAt() { return expiredAt; }
     public void setExpiredAt(LocalDateTime expiredAt) { this.expiredAt = expiredAt; }
+
+    public String getMinioUploadId() { return minioUploadId; }
+    public void setMinioUploadId(String minioUploadId) { this.minioUploadId = minioUploadId; }
+
+    public String getPartEtags() { return partEtags; }
+    public void setPartEtags(String partEtags) { this.partEtags = partEtags; }
 }

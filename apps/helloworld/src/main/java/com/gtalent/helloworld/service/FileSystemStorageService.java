@@ -19,6 +19,7 @@ import java.util.concurrent.Semaphore;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ import com.gtalent.helloworld.repository.StoredFileRepository;
 import com.gtalent.helloworld.repository.UploadSessionRepository;
 
 @Service
+@ConditionalOnProperty(name = "storage.provider", havingValue = "filesystem", matchIfMissing = true)
 public class FileSystemStorageService implements StorageService {
 
     private final Path rootLocation;
