@@ -54,10 +54,13 @@ import java.util.concurrent.TimeUnit;
  * Activated when {@code storage.provider=minio}.
  *
  * <h3>Chunked upload strategy</h3>
- * Chunks are staged to a local temp file (under {@code storage.location/staging/}).
+ * Chunks are staged to a local temp file (under
+ * {@code storage.location/staging/}).
  * On {@link #completeUpload}, the fully-assembled file is streamed to MinIO via
- * {@code putObject}; the MinIO SDK handles multipart internally for large objects.
- * This avoids the internal (non-public) multipart API of the MinIO Java SDK 8.5.x.
+ * {@code putObject}; the MinIO SDK handles multipart internally for large
+ * objects.
+ * This avoids the internal (non-public) multipart API of the MinIO Java SDK
+ * 8.5.x.
  *
  * <h3>Deduplication</h3>
  * MinIO object key format: {@code <sha256hex>.<ext>}.
@@ -67,7 +70,10 @@ import java.util.concurrent.TimeUnit;
 @ConditionalOnProperty(name = "storage.provider", havingValue = "minio")
 public class MinioStorageService implements StorageService {
 
-    /** Multipart part size passed to SDK (10 MiB); SDK uses multipart for objects > this. */
+    /**
+     * Multipart part size passed to SDK (10 MiB); SDK uses multipart for objects >
+     * this.
+     */
     private static final long PART_SIZE = 10 * 1024 * 1024L;
 
     private final MinioClient minioClient;
@@ -81,13 +87,13 @@ public class MinioStorageService implements StorageService {
 
     @Autowired
     public MinioStorageService(MinioClient minioClient,
-                                MinioProperties minioProperties,
-                                StorageProperties storageProperties,
-                                StoredFileRepository storedFileRepository,
-                                FileMetadataRepository fileMetadataRepository,
-                                UploadSessionRepository uploadSessionRepository,
-                                @Value("${storage.upload-session-expire-hours:24}") int uploadSessionExpireHours,
-                                @Value("${storage.presign-expiry-minutes:15}") int presignExpiryMinutes) {
+            MinioProperties minioProperties,
+            StorageProperties storageProperties,
+            StoredFileRepository storedFileRepository,
+            FileMetadataRepository fileMetadataRepository,
+            UploadSessionRepository uploadSessionRepository,
+            @Value("${storage.upload-session-expire-hours:24}") int uploadSessionExpireHours,
+            @Value("${storage.presign-expiry-minutes:15}") int presignExpiryMinutes) {
         this.minioClient = minioClient;
         this.minioProperties = minioProperties;
         this.storedFileRepository = storedFileRepository;
@@ -196,7 +202,7 @@ public class MinioStorageService implements StorageService {
             throw new StorageException("Upload already complete; no more chunks accepted: " + uploadId);
         }
 
-        long maxChunkBytes = totalSize - offset;  // prevent writing beyond declared size
+        long maxChunkBytes = totalSize - offset; // prevent writing beyond declared size
         Path stagingFile = stagingPath(uploadId);
         try (RandomAccessFile raf = new RandomAccessFile(stagingFile.toFile(), "rw")) {
             raf.seek(offset);
@@ -234,13 +240,13 @@ public class MinioStorageService implements StorageService {
             if (session.getReceivedBytes() != session.getTotalSize()) {
                 throw new StorageException(
                         "Upload incomplete: received " + session.getReceivedBytes()
-                        + " of " + session.getTotalSize() + " bytes");
+                                + " of " + session.getTotalSize() + " bytes");
             }
             long actualSize = Files.size(stagingFile);
             if (actualSize != session.getTotalSize()) {
                 throw new StorageException(
                         "File size mismatch: expected " + session.getTotalSize()
-                        + " bytes, got " + actualSize);
+                                + " bytes, got " + actualSize);
             }
 
             String hash = hashFile(stagingFile);
@@ -288,6 +294,18 @@ public class MinioStorageService implements StorageService {
         String objectKey = uploadId + (ext.isEmpty() ? "" : "." + ext);
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(presignExpiryMinutes);
 
+        UploadSession session = new UploadSession();
+        session.setUploadId(uploadId);
+        session.setOriginalName(originalName);
+        session.setContentType(contentType != null ? contentType : "application/octet-stream");
+        session.setTotalSize(fileSize);
+        session.setReceivedBytes(0L);
+        session.setStatus(UploadStatus.PENDING);
+        session.setExpiredAt(expiresAt);
+        // Reuse minioUploadId field to carry the UUID-based object key
+        session.setMinioUploadId(objectKey);
+        uploadSessionRepository.save(session);
+
         String presignedUrl;
         try {
             presignedUrl = minioClient.getPresignedObjectUrl(
@@ -301,26 +319,14 @@ public class MinioStorageService implements StorageService {
             throw new StorageException("Failed to generate presigned URL", e);
         }
 
-        UploadSession session = new UploadSession();
-        session.setUploadId(uploadId);
-        session.setOriginalName(originalName);
-        session.setContentType(contentType != null ? contentType : "application/octet-stream");
-        session.setTotalSize(fileSize);
-        session.setReceivedBytes(0L);
-        session.setStatus(UploadStatus.PENDING);
-        session.setExpiredAt(expiresAt);
-        // Reuse minioUploadId field to carry the UUID-based object key
-        session.setMinioUploadId(objectKey);
-        uploadSessionRepository.save(session);
-
         return new PresignedUploadResult(uploadId, presignedUrl, expiresAt.toString());
     }
 
     @Override
     @Transactional
     public FileMetadata confirmPresignedUpload(String uploadToken) {
-        UploadSession session = uploadSessionRepository.findByUploadId(uploadToken)
-                .filter(s -> s.getStatus() == UploadStatus.PENDING)
+
+        UploadSession session = uploadSessionRepository.findOneByUploadIdAndStatus(uploadToken, UploadStatus.PENDING)
                 .orElseThrow(() -> new StorageFileNotFoundException(
                         "Upload session not found or not PENDING: " + uploadToken));
 
@@ -328,7 +334,8 @@ public class MinioStorageService implements StorageService {
         String bucket = minioProperties.getBucketName();
 
         try {
-            // 1. Verify the object exists in MinIO and its size matches the declared totalSize
+            // 1. Verify the object exists in MinIO and its size matches the declared
+            // totalSize
             StatObjectResponse stats;
             try {
                 stats = minioClient.statObject(
@@ -336,7 +343,8 @@ public class MinioStorageService implements StorageService {
             } catch (Exception e) {
                 throw new StorageException(
                         "Object not found in MinIO – upload the file to the presigned URL first: "
-                        + uploadToken, e);
+                                + uploadToken,
+                        e);
             }
             if (stats.size() != session.getTotalSize()) {
                 throw new StorageException("Object size mismatch: expected "
@@ -350,7 +358,8 @@ public class MinioStorageService implements StorageService {
                 hash = computeHash(is);
             }
 
-            // 3. Dedup: if hash already in DB, delete the newly uploaded duplicate and reuse
+            // 3. Dedup: if hash already in DB, delete the newly uploaded duplicate and
+            // reuse
             StoredFile storedFile = storedFileRepository.findByHash(hash)
                     .map(existing -> {
                         try {
@@ -473,7 +482,7 @@ public class MinioStorageService implements StorageService {
     }
 
     private FileMetadata saveMetadata(StoredFile storedFile, String originalName,
-                                       String contentType, long fileSize) {
+            String contentType, long fileSize) {
         FileMetadata meta = new FileMetadata();
         meta.setStoredFile(storedFile);
         meta.setOriginalName(originalName);
@@ -486,12 +495,14 @@ public class MinioStorageService implements StorageService {
     private UploadSession loadActiveSession(String uploadId) {
         return uploadSessionRepository.findByUploadId(uploadId)
                 .filter(s -> s.getStatus() == UploadStatus.PENDING
-                          || s.getStatus() == UploadStatus.IN_PROGRESS)
+                        || s.getStatus() == UploadStatus.IN_PROGRESS)
                 .orElseThrow(() -> new StorageFileNotFoundException(
                         "Upload session not found or not active: " + uploadId));
     }
 
-    /** Requires IN_PROGRESS — used by completeUpload (guards zero-chunk complete). */
+    /**
+     * Requires IN_PROGRESS — used by completeUpload (guards zero-chunk complete).
+     */
     private UploadSession loadInProgressSession(String uploadId) {
         return uploadSessionRepository.findByUploadId(uploadId)
                 .filter(s -> s.getStatus() == UploadStatus.IN_PROGRESS)
@@ -518,14 +529,16 @@ public class MinioStorageService implements StorageService {
     }
 
     private static String extractExtension(String filename) {
-        if (filename == null) return "";
+        if (filename == null)
+            return "";
         int dot = filename.lastIndexOf('.');
         return (dot >= 0 && dot < filename.length() - 1) ? filename.substring(dot + 1) : "";
     }
 
     private static String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) sb.append(String.format("%02x", b));
+        for (byte b : bytes)
+            sb.append(String.format("%02x", b));
         return sb.toString();
     }
 }
