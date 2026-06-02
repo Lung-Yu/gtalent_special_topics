@@ -5,9 +5,31 @@ import java.util.List;
 
 import com.gtalent.helloworld.domain.model.Category;
 import com.gtalent.helloworld.domain.model.ExpenditureRecord;
+import com.gtalent.helloworld.domain.model.FileMetadata;
 import com.gtalent.helloworld.domain.valueobject.PaymentMethod;
 
 public class ExpenditureResp {
+
+    public static class AttachmentInfo {
+        private Long id;
+        private String originalName;
+        private String contentType;
+        private Long fileSize;
+
+        public static AttachmentInfo from(FileMetadata m) {
+            AttachmentInfo info = new AttachmentInfo();
+            info.id = m.getId();
+            info.originalName = m.getOriginalName();
+            info.contentType = m.getContentType();
+            info.fileSize = m.getFileSize();
+            return info;
+        }
+
+        public Long getId() { return id; }
+        public String getOriginalName() { return originalName; }
+        public String getContentType() { return contentType; }
+        public Long getFileSize() { return fileSize; }
+    }
 
     private Long id;
     private String username;
@@ -16,6 +38,7 @@ public class ExpenditureResp {
     private PaymentMethod payway;
     private LocalDate date;
     private List<String> categoryNames;
+    private List<AttachmentInfo> attachments;
 
     public static ExpenditureResp from(ExpenditureRecord expenditureRecord) {
         ExpenditureResp resp = new ExpenditureResp();
@@ -28,6 +51,9 @@ public class ExpenditureResp {
         resp.categoryNames = expenditureRecord.getCategories().stream()
                 .map(Category::getName)
                 .toList();
+        resp.attachments = expenditureRecord.getAttachments().stream()
+                .map(AttachmentInfo::from)
+                .toList();
         return resp;
     }
 
@@ -38,4 +64,5 @@ public class ExpenditureResp {
     public PaymentMethod getPayway() { return payway; }
     public LocalDate getDate() { return date; }
     public List<String> getCategoryNames() { return categoryNames; }
+    public List<AttachmentInfo> getAttachments() { return attachments; }
 }

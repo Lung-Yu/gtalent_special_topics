@@ -40,11 +40,12 @@
                             <th>日期</th>
                             <th>付款方式</th>
                             <th>分類</th>
+                            <th>佐證</th>
                             <th>操作</th>
                         </tr>
                     </thead>
                     <tbody id="exp-tbody">
-                        <tr><td colspan="7" class="text-center py-4 text-muted">載入中...</td></tr>
+                        <tr><td colspan="8" class="text-center py-4 text-muted">載入中...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -91,10 +92,23 @@
                     </select>
                     <div class="form-text">按住 Ctrl（Mac 為 ⌘ Command）可多選；至少選擇一個</div>
                 </div>
+
+                <!-- 佐證資料上傳 -->
+                <div class="mb-3">
+                    <label class="form-label">佐證資料</label>
+                    <div class="d-flex gap-2">
+                        <input type="file" class="form-control form-control-sm" id="inputAttachment"
+                               accept="image/*,.pdf,.jpg,.jpeg,.png,.gif,.webp">
+                        <button type="button" class="btn btn-sm btn-outline-primary text-nowrap"
+                                id="btnUpload" onclick="uploadAttachment()">上傳</button>
+                    </div>
+                    <div id="uploadStatus" class="form-text mt-1" style="display:none"></div>
+                    <ul class="list-group mt-2" id="attachmentList"></ul>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" onclick="saveExpenditure()">儲存</button>
+                <button type="button" class="btn btn-primary" id="btnSave" onclick="saveExpenditure()">儲存</button>
             </div>
         </div>
     </div>
@@ -123,6 +137,7 @@
     let currentPage = 0;
     let currentDate = null;
     let deleteId = null;
+    let pendingAttachments = []; // [{ fileMetadataId, originalName, fileSize }]
 
     const addModal    = new bootstrap.Modal(document.getElementById('addModal'));
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
@@ -161,10 +176,15 @@
     function renderTable(rows) {
         const tbody = document.getElementById('exp-tbody');
         if (!rows || rows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">無資料</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">無資料</td></tr>';
             return;
         }
-        tbody.innerHTML = rows.map((r, i) => `
+        tbody.innerHTML = rows.map((r, i) => {
+            const attachments = r.attachments || [];
+            const attachCell = attachments.length > 0
+                ? attachments.map(a => `<span class="badge bg-light text-dark border me-1" title="${escHtml(a.originalName)}">📎 ${escHtml(a.originalName)}</span>`).join('')
+                : '<span class="text-muted">—</span>';
+            return `
             <tr>
                 <td>${i + 1}</td>
                 <td>${escHtml(r.name || r.itemName || '')}</td>
@@ -172,10 +192,12 @@
                 <td>${r.date || ''}</td>
                 <td><span class="badge bg-info text-dark">${escHtml(r.payway || r.paymentMethod || '')}</span></td>
                 <td>${(r.categoryNames || []).map(c => `<span class="badge bg-secondary me-1">${escHtml(c)}</span>`).join('') || '<span class="text-muted">—</span>'}</td>
+                <td>${attachCell}</td>
                 <td>
                     <button class="btn btn-sm btn-outline-danger" onclick="openDeleteModal(${r.id}, '${escJs(r.name || r.itemName || '')}')">刪除</button>
                 </td>
-            </tr>`).join('');
+            </tr>`;
+        }).join('');
     }
 
     function renderPagination(data) {
@@ -220,9 +242,110 @@
         document.getElementById('inputMoney').value = '0';
         document.getElementById('inputPayway').value = 'LinePay';
         document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('inputAttachment').value = '';
+        pendingAttachments = [];
+        renderAttachmentList();
+        setUploadStatus('');
         await loadCategoryOptions();
         addModal.show();
     }
+
+    // ── 佐證上傳 ───────────────────────────────────────────────
+    async function uploadAttachment() {
+        const fileInput = document.getElementById('inputAttachment');
+        const file = fileInput.files[0];
+        if (!file) { alert('請先選擇檔案'); return; }
+
+        setUploadStatus('上傳中...', 'text-info');
+        setUploadBusy(true);
+
+        try {
+            // Step 1: 取得 presigned URL
+            const presignRes = await apiFetch('/v1/upload/presign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    originalName: file.name,
+                    contentType: file.type || 'application/octet-stream',
+                    fileSize: file.size
+                })
+            });
+            if (!presignRes || !presignRes.ok) {
+                const err = await presignRes?.json().catch(() => ({}));
+                throw new Error(err.message || '取得上傳網址失敗');
+            }
+            const { uploadToken, presignedUrl } = await presignRes.json();
+
+            // Step 2: 直接 PUT 到 MinIO（不帶 cookie）
+            const putRes = await fetch(presignedUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': file.type || 'application/octet-stream' },
+                body: file
+            });
+            if (!putRes.ok) throw new Error(`上傳至儲存空間失敗（${putRes.status}）`);
+
+            // Step 3: 通知後端確認完成
+            const confirmRes = await apiFetch(`/v1/upload/presign/${uploadToken}/confirm`, {
+                method: 'POST'
+            });
+            if (!confirmRes || !confirmRes.ok) {
+                const err = await confirmRes?.json().catch(() => ({}));
+                throw new Error(err.message || '確認上傳失敗');
+            }
+            const meta = await confirmRes.json();
+
+            pendingAttachments.push({
+                fileMetadataId: meta.id,
+                originalName: meta.originalName,
+                fileSize: meta.fileSize
+            });
+            renderAttachmentList();
+            setUploadStatus(`「${meta.originalName}」上傳成功`, 'text-success');
+            fileInput.value = '';
+        } catch (e) {
+            setUploadStatus(e.message, 'text-danger');
+        } finally {
+            setUploadBusy(false);
+        }
+    }
+
+    function removeAttachment(index) {
+        pendingAttachments.splice(index, 1);
+        renderAttachmentList();
+    }
+
+    function renderAttachmentList() {
+        const list = document.getElementById('attachmentList');
+        if (pendingAttachments.length === 0) { list.innerHTML = ''; return; }
+        list.innerHTML = pendingAttachments.map((a, i) => `
+            <li class="list-group-item d-flex justify-content-between align-items-center py-1 px-2">
+                <span class="text-truncate me-2" style="max-width:280px" title="${escHtml(a.originalName)}">
+                    📎 ${escHtml(a.originalName)}
+                    <small class="text-muted ms-1">(${formatSize(a.fileSize)})</small>
+                </span>
+                <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeAttachment(${i})">✕</button>
+            </li>`).join('');
+    }
+
+    function setUploadStatus(msg, cls = '') {
+        const el = document.getElementById('uploadStatus');
+        el.className = `form-text mt-1 ${cls}`;
+        el.textContent = msg;
+        el.style.display = msg ? '' : 'none';
+    }
+
+    function setUploadBusy(busy) {
+        document.getElementById('btnUpload').disabled = busy;
+        document.getElementById('btnSave').disabled = busy;
+    }
+
+    function formatSize(bytes) {
+        if (!bytes) return '0 B';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+    // ── end 佐證上傳 ───────────────────────────────────────────
 
     async function saveExpenditure() {
         const name    = document.getElementById('inputName').value.trim();
@@ -238,6 +361,9 @@
 
         const body = { name, money, payway, categoryNames };
         if (date) body.date = date;
+        if (pendingAttachments.length > 0) {
+            body.fileMetadataIds = pendingAttachments.map(a => a.fileMetadataId);
+        }
 
         const res = await apiFetch('/api/expenditures', {
             method: 'POST',
