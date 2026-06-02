@@ -64,6 +64,14 @@ public class ExpenditureRecord {
     )
     private List<Category> categories = new ArrayList<>();
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "expenditure_attachments",
+        joinColumns = @JoinColumn(name = "expenditure_record_id"),
+        inverseJoinColumns = @JoinColumn(name = "file_metadata_id")
+    )
+    private List<FileMetadata> attachments = new ArrayList<>();
+
     protected ExpenditureRecord() {}
 
     public ExpenditureRecord(User user, String name, int money, PaymentMethod payway, LocalDate date) {
@@ -93,4 +101,7 @@ public class ExpenditureRecord {
 
     public List<Category> getCategories() { return categories; }
     public void setCategories(List<Category> categories) { this.categories = categories; }
+
+    public List<FileMetadata> getAttachments() { return attachments; }
+    public void setAttachments(List<FileMetadata> attachments) { this.attachments = attachments; }
 }

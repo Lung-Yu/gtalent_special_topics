@@ -54,7 +54,8 @@ public class ExpenditureController {
         User user = resolveUser(auth);
         LocalDate date = req.getDate() != null ? req.getDate() : LocalDate.now();
         ExpenditureRecord record = expenditureService.create(
-                user, req.getName(), req.getMoney(), req.getPayway(), date, req.getCategoryNames());
+                user, req.getName(), req.getMoney(), req.getPayway(), date,
+                req.getCategoryNames(), req.getFileMetadataIds());
         return ExpenditureResp.from(record);
     }
 

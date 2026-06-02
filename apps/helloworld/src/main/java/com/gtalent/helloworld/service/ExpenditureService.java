@@ -10,9 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.gtalent.helloworld.domain.model.Category;
 import com.gtalent.helloworld.domain.model.ExpenditureRecord;
+import com.gtalent.helloworld.domain.model.FileMetadata;
 import com.gtalent.helloworld.domain.valueobject.PaymentMethod;
 import com.gtalent.helloworld.repository.CategoryRepository;
 import com.gtalent.helloworld.repository.ExpenditureRecordRepository;
+import com.gtalent.helloworld.repository.FileMetadataRepository;
 import com.gtalent.helloworld.service.entities.User;
 
 @Service
@@ -21,21 +23,30 @@ public class ExpenditureService {
 
     private final ExpenditureRecordRepository expenditureRecordRepository;
     private final CategoryRepository categoryRepository;
+    private final FileMetadataRepository fileMetadataRepository;
 
     public ExpenditureService(ExpenditureRecordRepository expenditureRecordRepository,
-                              CategoryRepository categoryRepository) {
+                              CategoryRepository categoryRepository,
+                              FileMetadataRepository fileMetadataRepository) {
         this.expenditureRecordRepository = expenditureRecordRepository;
         this.categoryRepository = categoryRepository;
+        this.fileMetadataRepository = fileMetadataRepository;
     }
 
     public ExpenditureRecord create(User user, String name, int money,
                                     PaymentMethod payway, LocalDate date,
-                                    List<String> categoryNames) {
+                                    List<String> categoryNames,
+                                    List<Long> fileMetadataIds) {
         ExpenditureRecord expenditureRecord = new ExpenditureRecord(user, name, money, payway, date);
 
         if (categoryNames != null && !categoryNames.isEmpty()) {
             List<Category> categories = categoryRepository.findByNameIn(categoryNames);
             expenditureRecord.setCategories(categories);
+        }
+
+        if (fileMetadataIds != null && !fileMetadataIds.isEmpty()) {
+            List<FileMetadata> attachments = fileMetadataRepository.findAllById(fileMetadataIds);
+            expenditureRecord.setAttachments(attachments);
         }
 
         return expenditureRecordRepository.save(expenditureRecord);

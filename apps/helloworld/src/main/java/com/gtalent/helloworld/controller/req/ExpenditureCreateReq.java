@@ -28,6 +28,9 @@ public class ExpenditureCreateReq {
     @NotEmpty(message = "至少需選擇一個分類")
     private List<@NotBlank(message = "分類名稱不能為空") String> categoryNames;
 
+    /** 佐證資料 ID 清單（選填，來自 presign confirm 回傳的 fileMetadataId） */
+    private List<Long> fileMetadataIds;
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
@@ -42,4 +45,7 @@ public class ExpenditureCreateReq {
 
     public List<String> getCategoryNames() { return categoryNames; }
     public void setCategoryNames(List<String> categoryNames) { this.categoryNames = categoryNames; }
+
+    public List<Long> getFileMetadataIds() { return fileMetadataIds; }
+    public void setFileMetadataIds(List<Long> fileMetadataIds) { this.fileMetadataIds = fileMetadataIds; }
 }

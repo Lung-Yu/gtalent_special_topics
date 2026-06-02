@@ -9,13 +9,14 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+import com.gtalent.helloworld.service.MinioProperties;
 import com.gtalent.helloworld.service.StorageProperties;
 import com.gtalent.helloworld.service.StorageService;
 
 @SpringBootApplication
 @EnableScheduling
 @EnableRetry
-@EnableConfigurationProperties(StorageProperties.class)
+@EnableConfigurationProperties({StorageProperties.class, MinioProperties.class})
 public class HelloworldApplication {
 
 	public static void main(String[] args) {

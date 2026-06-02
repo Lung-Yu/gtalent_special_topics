@@ -1,9 +1,9 @@
 package com.gtalent.helloworld.domain.model;
 
 public enum UploadStatus {
-    /** Session created; staging file allocated; no chunk received yet. */
+    /** Session initialised; no bytes received yet. */
     PENDING,
-    /** At least one chunk has been received; upload is in progress. */
+    /** At least one chunk successfully written; upload in progress. */
     IN_PROGRESS,
     /** All chunks received and the file has been committed to storage. */
     COMPLETED,

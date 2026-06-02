@@ -17,6 +17,7 @@ import java.util.concurrent.Semaphore;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -34,6 +35,7 @@ import com.gtalent.helloworld.repository.StoredFileRepository;
 import com.gtalent.helloworld.repository.UploadSessionRepository;
 
 @Service
+@ConditionalOnProperty(name = "storage.provider", havingValue = "filesystem", matchIfMissing = true)
 public class FileSystemStorageService implements StorageService {
 
     /** Shared I/O buffer size for chunk writes and SHA-256 hashing (256 KB). */
@@ -438,6 +440,22 @@ public class FileSystemStorageService implements StorageService {
             sb.append(String.format("%02x", b));
         }
         return sb.toString();
+    }
+
+    // ── Phase 3: pre-signed URL upload (not supported) ───────────────
+
+    @Override
+    public PresignedUploadResult generatePresignedUpload(String originalName, String contentType, long fileSize) {
+        throw new StorageException(
+                "Presigned URL upload is not supported by the filesystem storage provider. " +
+                "Set storage.provider=minio to enable this feature.");
+    }
+
+    @Override
+    public FileMetadata confirmPresignedUpload(String uploadToken) {
+        throw new StorageException(
+                "Presigned URL upload is not supported by the filesystem storage provider. " +
+                "Set storage.provider=minio to enable this feature.");
     }
 }
 
