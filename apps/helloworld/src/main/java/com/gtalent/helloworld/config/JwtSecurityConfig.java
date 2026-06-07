@@ -50,6 +50,8 @@ public class JwtSecurityConfig {
                 .requestMatchers("/auth/login", "/auth/verify", "/auth/refresh-code").permitAll()
                 // REST API 端點公開（無需 JWT）
                 .requestMatchers("/v1/**", "/v2/**").permitAll()
+                // Actuator 端點公開
+                .requestMatchers("/actuator/health", "/actuator/info", "/actuator/metrics").permitAll()
                 // 靜態資源與登入頁公開
                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
                 // 其餘所有路徑需要有效 JWT

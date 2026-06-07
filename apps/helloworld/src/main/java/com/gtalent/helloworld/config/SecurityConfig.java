@@ -86,6 +86,7 @@ public class SecurityConfig {
                 // 靜態資源與登入頁公開
                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
                 // REST API 端點公開（保持 Postman 可用）
+                .requestMatchers("/actuator/health", "/actuator/info", "/actuator/metrics").permitAll()
                 .requestMatchers("/v1/**", "/v2/**").permitAll()
                 // 其餘所有路徑需要登入
                 .anyRequest().authenticated()
