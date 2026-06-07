@@ -42,10 +42,6 @@ public class ExpenditureRecord {
 
     @NotBlank
     @Column(nullable = false)
-    private String saysay;
-
-    @NotBlank
-    @Column(nullable = false)
     private String name;
 
     @Min(0)

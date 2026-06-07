@@ -1,9 +1,16 @@
--- Hibernate TABLE-strategy sequence table (used by GenerationType.AUTO on MySQL)
-CREATE TABLE hibernate_sequences (
-    sequence_name VARCHAR(255) NOT NULL,
-    next_val      BIGINT,
-    PRIMARY KEY (sequence_name)
-);
+-- Hibernate 6 uses per-entity sequence tables for GenerationType.AUTO on MySQL.
+-- Each entity gets its own {entity_name}_seq table with a single next_val row.
+CREATE TABLE employee_seq    (next_val BIGINT);
+CREATE TABLE orders_seq      (next_val BIGINT);
+CREATE TABLE user_seq        (next_val BIGINT);
+CREATE TABLE product_seq     (next_val BIGINT);
+CREATE TABLE verify_code_seq (next_val BIGINT);
+
+INSERT INTO employee_seq    VALUES (1);
+INSERT INTO orders_seq      VALUES (1);
+INSERT INTO user_seq        VALUES (1);
+INSERT INTO product_seq     VALUES (1);
+INSERT INTO verify_code_seq VALUES (1);
 
 -- ──────────────────────────────────────────────
 -- Tables with no FK dependencies
@@ -22,7 +29,7 @@ CREATE TABLE `user` (
     PRIMARY KEY (id)
 );
 
--- IDs managed by hibernate_sequences (no AUTO_INCREMENT)
+-- IDs managed by employee_seq (no AUTO_INCREMENT)
 CREATE TABLE employee (
     id         INT,
     name       VARCHAR(255),
@@ -31,7 +38,7 @@ CREATE TABLE employee (
     PRIMARY KEY (id)
 );
 
--- @Entity(name="orders") → table name is 'orders'
+-- @Entity(name="orders") → table name is 'orders'; IDs managed by orders_seq
 CREATE TABLE orders (
     id         INT,
     name       VARCHAR(255),
@@ -50,6 +57,7 @@ CREATE TABLE posts (
     PRIMARY KEY (id)
 );
 
+-- IDs managed by verify_code_seq (no AUTO_INCREMENT)
 CREATE TABLE verify_code (
     id              BIGINT       NOT NULL,
     secret          VARCHAR(255) NOT NULL,
@@ -128,15 +136,16 @@ CREATE TABLE statistics_points (
 -- Tables that reference `user`
 -- ──────────────────────────────────────────────
 
--- IDs managed by hibernate_sequences (no AUTO_INCREMENT)
+-- IDs managed by product_seq (no AUTO_INCREMENT).
+-- Product.createdBy has no @JoinColumn → Hibernate derives FK column as created_by_id.
 CREATE TABLE product (
-    id         BIGINT       NOT NULL,
-    name       VARCHAR(255),
-    price      DOUBLE       NOT NULL,
-    created_at DATETIME(6),
-    created_by BIGINT,
+    id              BIGINT       NOT NULL,
+    name            VARCHAR(255),
+    price           DOUBLE       NOT NULL,
+    created_at      DATETIME(6),
+    created_by_id   BIGINT,
     PRIMARY KEY (id),
-    CONSTRAINT fk_product_user FOREIGN KEY (created_by) REFERENCES `user` (id)
+    CONSTRAINT fk_product_user FOREIGN KEY (created_by_id) REFERENCES `user` (id)
 );
 
 CREATE TABLE categories (
