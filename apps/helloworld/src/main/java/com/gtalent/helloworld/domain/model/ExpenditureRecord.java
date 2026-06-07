@@ -39,6 +39,11 @@ public class ExpenditureRecord {
     @JsonIgnoreProperties({"products", "password"})
     private User user;
 
+
+    @NotBlank
+    @Column(nullable = false)
+    private String saysay;
+
     @NotBlank
     @Column(nullable = false)
     private String name;
