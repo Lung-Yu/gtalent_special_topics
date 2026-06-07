@@ -57,6 +57,8 @@ public class ExpenditureRecord {
     @Column(nullable = false)
     private LocalDate date;
 
+    private String note;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "expenditure_categories",
@@ -99,6 +101,9 @@ public class ExpenditureRecord {
 
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
+
+    public String getNote() { return note; }
+    public void setNote(String note) { this.note = note; }
 
     public List<Category> getCategories() { return categories; }
     public void setCategories(List<Category> categories) { this.categories = categories; }
