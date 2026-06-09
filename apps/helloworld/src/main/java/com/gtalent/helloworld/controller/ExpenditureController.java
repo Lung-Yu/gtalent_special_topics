@@ -32,9 +32,12 @@ import com.gtalent.helloworld.service.entities.User;
 
 import jakarta.validation.Valid;
 
+@Log4j2
 @RestController
 @RequestMapping("/api/expenditures")
 public class ExpenditureController {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ExpenditureController.class);
 
     private final ExpenditureService expenditureService;
     private final UserRepository userRepository;
@@ -56,6 +59,7 @@ public class ExpenditureController {
         ExpenditureRecord record = expenditureService.create(
                 user, req.getName(), req.getMoney(), req.getPayway(), date,
                 req.getCategoryNames(), req.getFileMetadataIds());
+        log.info("Created expenditure record: {}", record);
         return ExpenditureResp.from(record);
     }
 
@@ -95,6 +99,7 @@ public class ExpenditureController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         expenditureService.delete(id);
+        log.info("Deleted expenditure record with id: {}", id);
         return ResponseEntity.noContent().build();
     }
 
