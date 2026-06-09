@@ -3,6 +3,7 @@ package com.gtalent.helloworld;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import de.codecentric.boot.admin.server.config.EnableAdminServer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -14,6 +15,7 @@ import com.gtalent.helloworld.service.StorageProperties;
 import com.gtalent.helloworld.service.StorageService;
 
 @SpringBootApplication
+@EnableAdminServer
 @EnableScheduling
 @EnableRetry
 @EnableConfigurationProperties({StorageProperties.class, MinioProperties.class})

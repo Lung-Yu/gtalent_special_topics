@@ -126,6 +126,19 @@
 			<version>8.5.10</version>
 		</dependency>
 
+		<!-- Spring Boot Admin Server -->
+		<dependency>
+			<groupId>de.codecentric</groupId>
+			<artifactId>spring-boot-admin-starter-server</artifactId>
+			<version>3.4.5</version>
+		</dependency>
+		<!-- Spring Boot Admin Client (self-registration) -->
+		<dependency>
+			<groupId>de.codecentric</groupId>
+			<artifactId>spring-boot-admin-starter-client</artifactId>
+			<version>3.4.5</version>
+		</dependency>
+
 		<!-- Spring Retry -->
 		<dependency>
 			<groupId>org.springframework.retry</groupId>
