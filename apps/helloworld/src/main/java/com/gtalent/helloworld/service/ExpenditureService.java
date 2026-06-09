@@ -3,6 +3,8 @@ package com.gtalent.helloworld.service;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,8 @@ import com.gtalent.helloworld.service.entities.User;
 @Transactional
 public class ExpenditureService {
 
+    private static final Logger log = LoggerFactory.getLogger(ExpenditureService.class);
+
     private final ExpenditureRecordRepository expenditureRecordRepository;
     private final CategoryRepository categoryRepository;
     private final FileMetadataRepository fileMetadataRepository;
@@ -37,6 +41,8 @@ public class ExpenditureService {
                                     PaymentMethod payway, LocalDate date,
                                     List<String> categoryNames,
                                     List<Long> fileMetadataIds) {
+        log.info("開始建立支出記錄: name={}, amount={}, payway={}, date={}", name, money, payway, date);
+
         ExpenditureRecord expenditureRecord = new ExpenditureRecord(user, name, money, payway, date);
 
         if (categoryNames != null && !categoryNames.isEmpty()) {
@@ -49,7 +55,9 @@ public class ExpenditureService {
             expenditureRecord.setAttachments(attachments);
         }
 
-        return expenditureRecordRepository.save(expenditureRecord);
+        ExpenditureRecord saved = expenditureRecordRepository.save(expenditureRecord);
+        log.info("支出記錄已儲存至資料庫: id={}", saved.getId());
+        return saved;
     }
 
     @Transactional(readOnly = true)

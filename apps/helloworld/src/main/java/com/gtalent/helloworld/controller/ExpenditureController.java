@@ -30,14 +30,17 @@ import com.gtalent.helloworld.service.ExpenditureService;
 import com.gtalent.helloworld.service.UserRepository;
 import com.gtalent.helloworld.service.entities.User;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
 import jakarta.validation.Valid;
 
-@Log4j2
 @RestController
 @RequestMapping("/api/expenditures")
 public class ExpenditureController {
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ExpenditureController.class);
+    private static final Logger log = LoggerFactory.getLogger(ExpenditureController.class);
 
     private final ExpenditureService expenditureService;
     private final UserRepository userRepository;
@@ -55,12 +58,22 @@ public class ExpenditureController {
     @ResponseStatus(HttpStatus.CREATED)
     public ExpenditureResp create(@Valid @RequestBody ExpenditureCreateReq req, Authentication auth) {
         User user = resolveUser(auth);
-        LocalDate date = req.getDate() != null ? req.getDate() : LocalDate.now();
-        ExpenditureRecord record = expenditureService.create(
-                user, req.getName(), req.getMoney(), req.getPayway(), date,
-                req.getCategoryNames(), req.getFileMetadataIds());
-        log.info("Created expenditure record: {}", record);
-        return ExpenditureResp.from(record);
+        MDC.put("userId", String.valueOf(user.getId()));
+        MDC.put("username", user.getUsername());
+        MDC.put("action", "CREATE_EXPENDITURE");
+
+        try {
+            LocalDate date = req.getDate() != null ? req.getDate() : LocalDate.now();
+            ExpenditureRecord expenditure = expenditureService.create(
+                    user, req.getName(), req.getMoney(), req.getPayway(), date,
+                    req.getCategoryNames(), req.getFileMetadataIds());
+            log.info("支出記錄建立成功: id={}", expenditure.getId());
+            return ExpenditureResp.from(expenditure);
+        } finally {
+            MDC.remove("userId");
+            MDC.remove("username");
+            MDC.remove("action");
+        }
     }
 
     /**
