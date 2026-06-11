@@ -1,0 +1,133 @@
+{
+  "title": "消費支出 Metrics",
+  "uid": "expenditure-metrics",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "支出建立速率 (req/min)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "rate(expenditure_create_count_total[1m]) * 60",
+          "legendFormat": "{{payway}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqpm", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 2,
+      "title": "支出金額分佈 (每分鐘加總)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "rate(expenditure_amount_TWD_sum[1m]) * 60",
+          "legendFormat": "{{payway}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "currencyTWD", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 3,
+      "title": "建立支出耗時 P95 (ms)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "histogram_quantile(0.95, rate(expenditure_create_duration_seconds_bucket[1m])) * 1000",
+          "legendFormat": "p95 {{payway}}"
+        },
+        {
+          "datasource": "Prometheus",
+          "expr": "histogram_quantile(0.50, rate(expenditure_create_duration_seconds_bucket[1m])) * 1000",
+          "legendFormat": "p50 {{payway}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ms", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 4,
+      "title": "支出記錄總筆數",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 8, "w": 6, "h": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "expenditure_records_total",
+          "legendFormat": "總筆數"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "short", "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [
+            { "color": "green", "value": null },
+            { "color": "yellow", "value": 100 },
+            { "color": "red", "value": 500 }
+          ]}
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "支出刪除速率 (req/min)",
+      "type": "timeseries",
+      "gridPos": { "x": 18, "y": 8, "w": 6, "h": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "rate(expenditure_delete_count_total[1m]) * 60",
+          "legendFormat": "刪除次數"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqpm", "color": { "mode": "fixed", "fixedColor": "red" } }
+      }
+    },
+    {
+      "id": 6,
+      "title": "查詢支出速率 (req/min)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "rate(expenditure_query_count_total[1m]) * 60",
+          "legendFormat": "{{type}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "reqpm", "color": { "mode": "palette-classic" } }
+      }
+    },
+    {
+      "id": 7,
+      "title": "平均單筆金額 (TWD)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "expenditure_amount_TWD_sum / expenditure_amount_TWD_count",
+          "legendFormat": "{{payway}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "currencyTWD", "color": { "mode": "palette-classic" } }
+      }
+    }
+  ]
+}

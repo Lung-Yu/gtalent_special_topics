@@ -6,10 +6,14 @@ import jakarta.servlet.http.Cookie;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * JWT 認證的 SecurityFilterChain。
@@ -26,6 +30,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  */
 @Configuration
 @ConditionalOnProperty(name = "app.auth.mode", havingValue = "jwt")
+@Order(1)
 public class JwtSecurityConfig {
 
     private final JwtUtil jwtUtil;
@@ -37,6 +42,10 @@ public class JwtSecurityConfig {
     @Bean
     public SecurityFilterChain jwtFilterChain(HttpSecurity http) throws Exception {
         http
+            // ── 停用 form login（Spring Security 預設啟用，會攔截 GET /login 並渲染
+            //    Spring Boot Admin 的 login.html，導致 uiSettings=null 錯誤）
+            .formLogin(AbstractHttpConfigurer::disable)
+
             // ── Stateless：不建立也不使用 HttpSession ──────────────
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -54,17 +63,19 @@ public class JwtSecurityConfig {
                 .requestMatchers("/actuator/**").permitAll()
                 // Spring Boot Admin UI
                 .requestMatchers("/admin/**", "/assets/**").permitAll()
-                // 靜態資源與登入頁公開
-                .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
+                // 靜態資源與登入頁公開（/app-login 是實際登入頁，/login 保留相容）
+                .requestMatchers("/app-login", "/login", "/css/**", "/js/**", "/images/**").permitAll()
                 // 其餘所有路徑需要有效 JWT
                 .anyRequest().authenticated()
             )
-            // ── 未認證的瀏覽器請求導向 /login ────────────────────
+            // ── 未認證的瀏覽器請求導向 /app-login ────────────────
+            // 注意：不能用 /login，因為 Spring Boot Admin 的 HomepageForwardingFilter
+            // 將 /login 列為 SPA 路由並攔截轉發，導致 uiSettings=null 錯誤
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) -> {
                     String accept = request.getHeader("Accept");
                     if (accept != null && accept.contains("text/html")) {
-                        response.sendRedirect("/login");
+                        response.sendRedirect("/app-login");
                     } else {
                         response.sendError(401, "Unauthorized");
                     }
@@ -88,10 +99,25 @@ public class JwtSecurityConfig {
                     cookie.setHttpOnly(true);
                     response.addCookie(cookie);
                 })
-                .logoutSuccessUrl("/login")
+                .logoutSuccessUrl("/app-login")
                 .permitAll()
             );
 
         return http.build();
+    }
+
+    @Bean
+    public WebMvcConfigurer loginViewConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addViewControllers(ViewControllerRegistry registry) {
+                // 實際登入頁：/app-login → app-login.html
+                // Spring Boot Admin 的 HomepageForwardingFilter 會攔截 /login（已列為 SPA 路由），
+                // 所以改用 /app-login 完全避開衝突。
+                registry.addViewController("/app-login").setViewName("app-login");
+                // /login 保留為相容，重導向到 /app-login
+                registry.addRedirectViewController("/login", "/app-login");
+            }
+        };
     }
 }

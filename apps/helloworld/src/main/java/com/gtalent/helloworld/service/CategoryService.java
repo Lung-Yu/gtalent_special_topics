@@ -1,7 +1,5 @@
 package com.gtalent.helloworld.service;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,16 +15,21 @@ import com.gtalent.helloworld.service.entities.User;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final CategoryCacheService categoryCacheService;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository,
+                           CategoryCacheService categoryCacheService) {
         this.categoryRepository = categoryRepository;
+        this.categoryCacheService = categoryCacheService;
     }
 
     public Category create(String name, String icon, TypeCategory type, User createdBy) {
         if (categoryRepository.existsByTypeAndName(type, name)) {
             throw new IllegalArgumentException("分類已存在：type=" + type + ", name=" + name);
         }
-        return categoryRepository.save(new Category(name, icon, type, createdBy));
+        Category saved = categoryRepository.save(new Category(name, icon, type, createdBy));
+        categoryCacheService.evictAll();
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -51,10 +54,13 @@ public class CategoryService {
         category.setName(name);
         category.setIcon(icon);
         category.setType(type);
-        return categoryRepository.save(category);
+        Category saved = categoryRepository.save(category);
+        categoryCacheService.evictAll();
+        return saved;
     }
 
     public void delete(Long id) {
         categoryRepository.deleteById(id);
+        categoryCacheService.evictAll();
     }
 }

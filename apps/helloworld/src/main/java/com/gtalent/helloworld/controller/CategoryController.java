@@ -1,8 +1,5 @@
 package com.gtalent.helloworld.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -25,6 +22,7 @@ import com.gtalent.helloworld.controller.req.CategoryCreateReq;
 import com.gtalent.helloworld.controller.resp.CategoryResp;
 import com.gtalent.helloworld.domain.model.Category;
 import com.gtalent.helloworld.domain.valueobject.TypeCategory;
+import com.gtalent.helloworld.service.CategoryCacheService;
 import com.gtalent.helloworld.service.CategoryService;
 import com.gtalent.helloworld.service.UserRepository;
 import com.gtalent.helloworld.service.entities.User;
@@ -36,10 +34,14 @@ import jakarta.validation.Valid;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final CategoryCacheService categoryCacheService;
     private final UserRepository userRepository;
 
-    public CategoryController(CategoryService categoryService, UserRepository userRepository) {
+    public CategoryController(CategoryService categoryService,
+                              CategoryCacheService categoryCacheService,
+                              UserRepository userRepository) {
         this.categoryService = categoryService;
+        this.categoryCacheService = categoryCacheService;
         this.userRepository = userRepository;
     }
 
@@ -48,18 +50,22 @@ public class CategoryController {
     public Page<CategoryResp> findAll(
             @RequestParam(required = false) TypeCategory type,
             @PageableDefault(size = 20, sort = "name") Pageable pageable) {
+        Page<CategoryResp> categories = categoryCacheService.getCategoryList(type, pageable,
+            () -> {
+                Page<Category> dbResult = (type != null)
+                    ? categoryService.findByType(type, pageable)
+                    : categoryService.findAll(pageable);
+                return dbResult.map(CategoryResp::from);
+            });
 
-        Page<Category> categories = (type != null)
-                ? categoryService.findByType(type, pageable)
-                : categoryService.findAll(pageable);
-
-        return categories.map(CategoryResp::from);
+        return categories;
     }
 
     /** GET /api/categories/{id} */
     @GetMapping("/{id}")
     public CategoryResp findOne(@PathVariable Long id) {
-        return CategoryResp.from(categoryService.findById(id));
+        return categoryCacheService.getCategoryById(id,
+                () -> CategoryResp.from(categoryService.findById(id)));
     }
 
     /** POST /api/categories */
