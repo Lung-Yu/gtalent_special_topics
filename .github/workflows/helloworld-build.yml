@@ -40,3 +40,22 @@ jobs:
           name: helloworld-jar
           path: apps/helloworld/target/*.jar
           if-no-files-found: error
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/helloworld
+          dockerfile: ./apps/helloworld/Dockerfile
+          push: false
+          tags: helloworld:${{ github.sha }},helloworld:latest
+          outputs: type=docker,dest=/tmp/helloworld-image.tar
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: helloworld-docker-image
+          path: /tmp/helloworld-image.tar
+          if-no-files-found: error
