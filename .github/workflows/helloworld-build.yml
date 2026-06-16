@@ -1,0 +1,43 @@
+name: helloworld Build
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Build helloworld JAR
+        working-directory: ${{ github.workspace }}
+        run: |
+          chmod +x ./apps/helloworld/mvnw
+          ./apps/helloworld/mvnw -f apps/helloworld/pom.xml -B package
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: helloworld-jar
+          path: apps/helloworld/target/*.jar
+          if-no-files-found: error
