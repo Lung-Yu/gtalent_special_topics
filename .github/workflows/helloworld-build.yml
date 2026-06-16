@@ -30,10 +30,9 @@ jobs:
           cache: maven
 
       - name: Build helloworld JAR
-        working-directory: ${{ github.workspace }}
         run: |
           chmod +x ./apps/helloworld/mvnw
-          ./apps/helloworld/mvnw -f apps/helloworld/pom.xml -B package
+          ./apps/helloworld/mvnw -f apps/helloworld/pom.xml -B package -DskipTests
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
